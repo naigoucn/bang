@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "pianke/meta",
+  "version": "0.10.1",
+  "title": "元信息条",
+  "category": "pianke-blocks",
+  "icon": "list-view",
+  "description": "时间 / 地点 / 天气 / 设备等一行小字。",
+  "keywords": ["元信息", "时间", "地点", "meta"],
+  "textdomain": "pianke",
+  "supports": {
+    "align": false,
+    "anchor": true,
+    "className": true
+  },
+  "attributes": {
+    "items": {
+      "type": "array",
+      "default": [],
+      "items": { "type": "object" }
+    }
+  },
+  "example": {
+    "attributes": {
+      "items": [
+        { "label": "地点", "value": "山脚" },
+        { "label": "天气", "value": "多云" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "settings": {
+    "appearanceTools": true,
+    "layout": {
+      "contentSize": "760px",
+      "wideSize": "1120px"
+    },
+    "color": {
+      "custom": false,
+      "palette": [
+        { "slug": "ink", "color": "#000000", "name": "纯黑" },
+        { "slug": "muted", "color": "#666666", "name": "中灰" },
+        { "slug": "line", "color": "#E5E5E5", "name": "描边" },
+        { "slug": "soft", "color": "#F5F5F5", "name": "浅灰底" },
+        { "slug": "paper", "color": "#FFFFFF", "name": "纯白" }
+      ]
+    },
+    "typography": {
+      "customFontSize": false,
+      "fontFamilies": [
+        {
+          "slug": "system-cn",
+          "name": "中文系统字体",
+          "fontFamily": "-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", sans-serif"
+        }
+      ],
+      "fontSizes": [
+        { "slug": "small", "size": "13px", "name": "小" },
+        { "slug": "medium", "size": "15px", "name": "正文" },
+        { "slug": "large", "size": "20px", "name": "大" },
+        { "slug": "x-large", "size": "26px", "name": "特大" }
+      ]
+    },
+    "spacing": {
+      "units": ["px", "rem", "%"],
+      "blockGap": true
+    },
+    "useRootPaddingAwareAlignments": false
+  },
+  "styles": {
+    "typography": {
+      "fontFamily": "var:preset|font-family|system-cn"
+    },
+    "elements": {
+      "button": {
+        "border": { "radius": "12px" }
+      },
+      "link": {
+        "typography": { "textDecoration": "underline" }
+      }
+    }
+  }
+}

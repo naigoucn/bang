@@ -1,0 +1,148 @@
+/*!
+ * Bang × PhotoSwipe 5 — 视觉覆盖（本地资源，零 CDN）
+ * 依赖：assets/vendor/photoswipe/photoswipe.css 先加载
+ * 原则：白底黑钮 / 12px 圆角 / 细描边 / 无阴影无渐变；
+ *       遮罩半透明 + 轻磨砂，图片浮在正文之上，背景文字仍可读。
+ */
+
+.pswp {
+  --pswp-bg: var(--bg);
+  --pswp-placeholder-bg: var(--soft);
+  --pswp-icon-color: var(--ink);
+  --pswp-icon-color-secondary: var(--bg);
+  --pswp-icon-stroke-color: var(--bg);
+  --pswp-icon-stroke-width: 2px;
+  --pswp-preloader-color: var(--line);
+  --pswp-preloader-color-secondary: var(--ink-2);
+  --pswp-error-text-color: var(--ink-2);
+  --pswp-root-z-index: 150000;
+}
+
+/* 悬浮感的关键：不是一整块不透明底板，而是半透明 + 轻微虚化。
+   opacity 由 PhotoSwipe 的 bgOpacity 控制，正文会透出来。 */
+.pswp__bg {
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+/* 图片本体：一圈细描边 + 12px 圆角，像一张浮起来的卡片，不用阴影 */
+.pswp__img {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--soft);
+}
+.pswp__img--placeholder,
+.pswp__img--with-bg {
+  border-radius: var(--radius);
+}
+
+/* 顶部工具条：按钮改成独立的黑白小胶囊，不再贴着视口边缘 */
+.pswp__top-bar {
+  height: 64px;
+  padding: 12px 16px;
+  align-items: flex-start;
+  box-sizing: border-box;
+}
+.pswp__button {
+  opacity: 1;
+}
+.pswp__button--close,
+.pswp__button--zoom {
+  width: 40px;
+  height: 40px;
+  margin: 0 0 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+.pswp__button--close { margin-right: 0; }
+.pswp__button:hover,
+.pswp__button:active,
+.pswp__button:focus { border-color: var(--ink-2); }
+.pswp__button:disabled { opacity: .35; }
+.pswp__button--close .pswp__icn,
+.pswp__button--zoom .pswp__icn {
+  top: 8px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
+}
+
+/* 计数：黑底白字小胶囊固定在左上，跟工具条同一条水平线 */
+.pswp__counter {
+  position: absolute;
+  left: 16px;
+  top: 12px;
+  height: 40px;
+  margin: 0;
+  padding: 0 14px;
+  line-height: 40px;
+  font-size: 12px;
+  letter-spacing: .08em;
+  color: var(--bg);
+  background: var(--ink);
+  border-radius: var(--radius);
+  text-shadow: none;
+  opacity: 1;
+}
+
+/* 左右切换：悬浮在两侧的圆角小方钮 */
+.pswp__button--arrow {
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+.pswp__button--arrow--prev { left: 16px; }
+.pswp__button--arrow--next { right: 16px; }
+.pswp__button--arrow .pswp__icn {
+  top: 50%;
+  margin-top: -12px;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border-radius: 0;
+}
+.pswp__button--arrow--prev .pswp__icn { left: 10px; }
+.pswp__button--arrow--next .pswp__icn { left: auto; right: 10px; }
+
+/* 图注：底部居中的黑底胶囊，跟随换页淡入淡出（pswp__hide-on-close 负责） */
+.pk-pswp-caption {
+  position: absolute;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 10;
+  max-width: min(560px, calc(100% - 32px));
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+  pointer-events: none;
+}
+.pk-pswp-caption[hidden] { display: none; }
+
+.pswp__error-msg { color: var(--ink); }
+
+@media (max-width: 700px) {
+  .pswp__top-bar { padding: 10px 12px; height: 60px; }
+  .pswp__counter { left: 12px; top: 10px; }
+  .pswp__button--close,
+  .pswp__button--zoom { width: 38px; height: 38px; }
+  .pswp__button--close .pswp__icn,
+  .pswp__button--zoom .pswp__icn { top: 7px; left: 7px; }
+  .pk-pswp-caption { bottom: max(14px, env(safe-area-inset-bottom)); font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pswp,
+  .pswp__bg,
+  .pswp__hide-on-close,
+  .pswp__img { transition: none !important; }
+}

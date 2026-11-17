@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "pianke/tip",
+  "version": "0.13.0",
+  "title": "提示框",
+  "category": "pianke-blocks",
+  "icon": "info",
+  "description": "四种状态的提示卡：提示 / 注意 / 搞定 / 警告，黑白图标区分。",
+  "keywords": ["提示", "警告", "notice", "tip"],
+  "textdomain": "pianke",
+  "supports": {
+    "align": false,
+    "anchor": true,
+    "className": true
+  },
+  "attributes": {
+    "type": {
+      "type": "string",
+      "default": "info",
+      "enum": ["info", "warning", "success", "danger"]
+    },
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "content": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "example": {
+    "attributes": {
+      "type": "info",
+      "title": "写作提示",
+      "content": "留白不是空，是给眼睛一次呼吸。"
+    }
+  }
+}

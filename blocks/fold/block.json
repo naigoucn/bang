@@ -1,0 +1,37 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "pianke/fold",
+  "version": "0.13.0",
+  "title": "折叠内容",
+  "category": "pianke-blocks",
+  "icon": "arrow-down-alt2",
+  "description": "一段默认收起、点击展开的内容，可设置默认展开。",
+  "keywords": ["折叠", "展开", "details", "fold"],
+  "textdomain": "pianke",
+  "supports": {
+    "align": false,
+    "anchor": true,
+    "className": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": "点击展开"
+    },
+    "content": {
+      "type": "string",
+      "default": ""
+    },
+    "open": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "example": {
+    "attributes": {
+      "title": "点击展开",
+      "content": "这里是被折叠的内容。"
+    }
+  }
+}

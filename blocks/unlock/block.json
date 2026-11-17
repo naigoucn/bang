@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "pianke/unlock",
+  "version": "0.13.27",
+  "title": "阅读解锁",
+  "category": "pianke-blocks",
+  "icon": "lock",
+  "description": "把一段内容锁起来：作者四选一（点赞 / 评论 / 密码 / 入群），读者只能用选定的方式解锁；选「密码可见」可直接在区块上设置专属密码。",
+  "keywords": ["解锁", "点赞可见", "评论可见", "密码可见", "入群可见", "unlock", "lock"],
+  "textdomain": "pianke",
+  "supports": {
+    "align": false,
+    "anchor": true,
+    "className": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "desc": {
+      "type": "string",
+      "default": ""
+    },
+    "teaser": {
+      "type": "string",
+      "default": ""
+    },
+    "content": {
+      "type": "string",
+      "default": ""
+    },
+    "method": {
+      "type": "string",
+      "default": "group",
+      "enum": ["like", "comment", "password", "group"]
+    },
+    "password": {
+      "type": "string",
+      "default": ""
+    },
+    "locked": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "example": {
+    "attributes": {
+      "method": "group",
+      "teaser": "前面的内容所有人都能看到……",
+      "content": "这一段需按上方选定的方式解锁后可见。"
+    }
+  }
+}

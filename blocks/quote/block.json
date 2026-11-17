@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "pianke/quote",
+  "version": "0.10.1",
+  "title": "金句卡",
+  "category": "pianke-blocks",
+  "icon": "format-quote",
+  "description": "一段引文，可附上出处。",
+  "keywords": ["引用", "金句", "quote"],
+  "textdomain": "pianke",
+  "supports": {
+    "align": false,
+    "anchor": true,
+    "className": true
+  },
+  "attributes": {
+    "text": {
+      "type": "string",
+      "default": ""
+    },
+    "source": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "example": {
+    "attributes": {
+      "text": "好看的其实不是太阳，是它走之后那几分钟。",
+      "source": "山里的傍晚"
+    }
+  }
+}

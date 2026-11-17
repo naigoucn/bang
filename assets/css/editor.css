@@ -1,0 +1,28 @@
+/*
+ * Bang · 编辑器专用排版
+ * 由 add_editor_style() 载入，Gutenberg 会自动把选择器限定在编辑器内容区。
+ * 只写与前台阅读层一致的排版，不写颜色，避免破坏深色模式与后台 UI。
+ */
+.wp-block {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  line-height: 1.95;
+}
+.wp-block[data-align="wide"] { max-width: 1120px; }
+.wp-block[data-align="full"] { max-width: none; }
+p, li { font-size: 15px; line-height: 1.95; }
+h1, h2, h3 { font-weight: 600; line-height: 1.4; }
+h2 { font-size: 20px; }
+h3 { font-size: 17px; }
+a { text-decoration: underline; text-underline-offset: 3px; }
+.editor-post-title__input {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.wp-block-post-title { font-weight: 600; }
+.block-editor-block-list__block { border-radius: 12px; }

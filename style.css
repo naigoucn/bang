@@ -1,0 +1,3006 @@
+/*
+Theme Name: Bang
+Theme URI: https://bang.ink
+Author: naigou
+Author URI: https://naigou.cn
+Description: Bang · ink——极简博客主题：卡片时间线 + 共享元素转场阅读层，移动端优先。落笔有声，留白有度。
+Version: 0.13.27
+Requires at least: 6.0
+Requires PHP: 7.4
+License: GPL v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: pianke
+Tags: blog, photography, portfolio, one-column, translation-ready
+*/
+
+/* ============================================================
+   设计 token：白底 + 黑操作按钮 / 12px 圆角 / 无阴影 / 无渐变
+   头部工具按钮无底色，只留图标；黑白只指 UI 配色，图片、插画、logo 保留原色
+   基础样式 mobile-first，宽屏在文件末尾做最小限宽兜底
+   ============================================================ */
+:root{
+  --bg:#FFFFFF; --surface:#FFFFFF; --soft:#F5F5F5; --line:#E5E5E5;
+  --ink:#000000; --ink-2:#666666; --ink-3:#999999; --accent:#000000;
+  --radius:12px; --maxw:720px;
+  --ease:cubic-bezier(.22,.8,.22,1);
+  --head-h:61px;
+  --veil:rgba(0,0,0,.24);
+  /* 悬浮条毛玻璃：半透明底 + backdrop-filter，深浅两套 */
+  --dock-bg:rgba(255,255,255,.62);
+  --dock-line:rgba(0,0,0,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#000000; --surface:#000000; --soft:#111111; --line:#333333;
+    --ink:#FFFFFF; --ink-2:#AAAAAA; --ink-3:#777777; --accent:#FFFFFF;
+    --veil:rgba(0,0,0,.5);
+    --dock-bg:rgba(32,32,32,.62);
+    --dock-line:rgba(255,255,255,.14);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#000000; --soft:#111111; --line:#333333;
+  --ink:#FFFFFF; --ink-2:#AAAAAA; --ink-3:#777777; --accent:#FFFFFF;
+  --veil:rgba(0,0,0,.5);
+  --dock-bg:rgba(32,32,32,.62);
+  --dock-line:rgba(255,255,255,.14);
+}
+
+/* ============================================================
+   基础（手机优先）
+   ============================================================ */
+*{box-sizing:border-box}
+/* 触摸点击时浏览器默认会盖一层亮蓝色高亮框（Chrome 移动模拟为 rgba(51,181,229,.4)），关掉它 */
+html{-webkit-tap-highlight-color:transparent}
+/* 隐藏全部滚动条（仍保留滚动能力）：用 display:none 抹掉滚动条，不再预留 gutter */
+html,body{scrollbar-width:none;-ms-overflow-style:none}
+html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
+.pc-aside,.pc-aside-inner,.search-results,.detail,.detail-inner{scrollbar-width:none;-ms-overflow-style:none}
+.pc-aside::-webkit-scrollbar,.pc-aside-inner::-webkit-scrollbar,.search-results::-webkit-scrollbar,.detail::-webkit-scrollbar,.detail-inner::-webkit-scrollbar{display:none;width:0;height:0}
+body.pk-body{
+  margin:0; padding-bottom:56px; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:15px; line-height:1.75; -webkit-font-smoothing:antialiased;
+}
+body.pk-body a{color:inherit;text-decoration:none}
+/* 画廊详情按钮是 <a>，必须提权压过上面这条，否则黑底黑字看不见 */
+button{font:inherit;color:inherit}
+.wrap{width:100%;max-width:100%;margin:0 auto;padding:0 20px}
+
+/* Lucide 图标：统一线性描边，随 currentColor 变色 */
+.pk-icon{display:block;flex:none;stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round}
+/* 鼠标/触摸点击不留任何轮廓；键盘 Tab 才显示主题色描边，杜绝浏览器默认的蓝色 focus ring */
+body.pk-body :focus:not(:focus-visible){outline:none}
+.icon-btn:focus-visible,.card:focus-visible,
+.link-btn:focus-visible,
+body.pk-body :focus-visible:not(input):not(textarea):not(select){outline:2px solid var(--accent);outline-offset:3px}
+body.pk-body input:focus-visible,body.pk-body textarea:focus-visible,body.pk-body select:focus-visible{outline:none}
+
+/* 头部工具按钮：无底色、无边框，只保留图标；状态靠图标颜色变化 */
+.icon-btn,.head-icon{
+  width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;
+  background:transparent;color:var(--ink-2);border:0;border-radius:var(--radius);
+  cursor:pointer;transition:color .2s,opacity .2s;
+}
+.icon-btn:hover,.icon-btn:focus-visible,.icon-btn.is-active{color:var(--ink)}
+/* 文章页右上角：分享 + 搜索，默认隐藏，只在阅读态出现 */
+.head-icon{display:none}
+.site-head.reading .head-icon,
+.site-head.is-single .head-icon{display:inline-flex;color:var(--head-icon)}
+.site-head.reading .head-icon:hover,
+.site-head.reading .head-icon:focus-visible,
+.site-head.is-single .head-icon:hover,
+.site-head.is-single .head-icon:focus-visible{color:var(--head-icon);opacity:.65}
+.i-sun{display:none}
+:root[data-theme="dark"] .i-moon{display:none}
+:root[data-theme="dark"] .i-sun{display:block}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .i-moon{display:none}
+  :root:not([data-theme="light"]) .i-sun{display:block}
+}
+/* 深浅色 Logo（0.13.14）：两张 <img> 始终输出，按主题显隐；与上方图标同一套选择器。
+   dark 图在 HTML 里带内联 display:none 兜底（防旧 CSS 缓存 / 未加载时两张并排），
+   所以这里必须带 !important 才能在深色模式下覆盖内联样式把它显示出来。 */
+:root .pk-logo-dark{display:none!important}
+:root[data-theme="dark"] .pk-logo-light{display:none!important}
+:root[data-theme="dark"] .pk-logo-dark{display:block!important}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .pk-logo-light{display:none!important}
+  :root:not([data-theme="light"]) .pk-logo-dark{display:block!important}
+}
+
+/* ============================================================
+   站点头部
+   ============================================================ */
+.site-head{position:sticky;top:0;z-index:60;background:var(--bg);border-bottom:1px solid var(--line)}
+body.admin-bar .site-head{top:46px}
+.head-inner{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;height:60px}
+.brand{display:flex;align-items:center;min-width:0;min-height:40px}
+.mark{display:inline-flex;align-items:center;gap:10px;height:28px}
+.logo-img{height:28px;width:28px;object-fit:contain;display:block}
+/* 站名常驻在 Logo 图标右侧（顶栏精简后顶栏只剩这一组品牌） */
+.mark-text{display:block;font-size:15px;font-weight:600;letter-spacing:.06em;line-height:1;white-space:nowrap}
+.logo-failed .mark-text{display:block}
+.site-head nav{display:flex;align-items:center;gap:2px;flex:none}
+
+/* 滚过正文标题后，nav 中间淡入文章标题。
+   绝对定位 + 限宽省略：不挤压 logo / 右上双图标，也不改变 60px（宽屏 72px）头部高度。 */
+.head-title{
+  position:absolute;left:calc(50% + var(--sidebar-w,0px)/2);top:50%;transform:translate(-50%,-50%);
+  width:max-content;max-width:calc(100% - 180px);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--ink);font-size:13px;font-weight:500;line-height:1.4;letter-spacing:.01em;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .22s ease,visibility .22s ease,left .28s var(--ease);
+}
+
+/* 展开文章 / 独立文章页：隐藏首页工具，右上角只留分享 + 搜索 */
+.site-head.reading .icon-btn,
+.site-head.is-single .icon-btn{display:none}
+/* a 形态按钮：压过 body.pk-body a{color:inherit} */
+body.pk-body a.link-btn{color:var(--bg);text-decoration:none}
+
+/* 文章内页：头部全透明，浮在封面图上。
+   图标按「封面区 / 正文区」两段切色：封面是浅色彩图用深图标，正文随主题。
+   保留 1px 透明描边，保证展开前后头部高度完全一致。 */
+.site-head.reading,
+.site-head.is-single{
+  --head-icon:#111111;
+  background:transparent;border-bottom-color:transparent;
+}
+.site-head.reading.is-past-hero,
+.site-head.is-single.is-past-hero{--head-icon:var(--ink-2)}
+/* 显示标题时补一层与正文同色的底：透明头部会让正文文字穿透并压住标题。
+   仍保留 1px 透明描边，头部高度不变，不加阴影 / 渐变 / 毛玻璃。 */
+.site-head.reading.is-past-title,
+.site-head.is-single.is-past-title{background:var(--bg)}
+.site-head.reading.is-past-title .head-title,
+.site-head.is-single.is-past-title .head-title{opacity:1;visibility:visible}
+
+/* 搜索弹窗：贴着导航下方的顶部抽屉，与全站圆角 / 无阴影 / 反色一致 */
+.search-dialog{
+  width:calc(100% - 32px);max-width:560px;
+  top:0;right:0;bottom:auto;left:0;
+  margin:calc(env(safe-area-inset-top,0px) + 76px) auto 0;
+  padding:0;border:0;background:transparent;color:var(--ink);
+  display:block;
+  opacity:0;transform:translateY(-14px) scale(.98);
+  transition:opacity .24s ease,transform .24s ease,
+             background-color .5s ease,color .5s ease;
+}
+/* 关闭态必须彻底隐藏：作者样式优先级高于浏览器 dialog:not([open]) 的 display:none，
+   不显式压回 none 会让弹窗以 block 留在头部上方、拦截点击 */
+.search-dialog:not([open]){display:none}
+.search-dialog[open]{opacity:1;transform:translateY(0) scale(1)}
+.search-dialog[open].is-closing{opacity:0;transform:translateY(-14px) scale(.98)}
+.search-dialog::backdrop{background:rgba(0,0,0,0);transition:background-color .24s ease}
+.search-dialog[open]::backdrop{background:rgba(0,0,0,.3)}
+.search-dialog[open].is-closing::backdrop{background:rgba(0,0,0,0)}
+@starting-style{
+  .search-dialog[open]{opacity:0;transform:translateY(-14px) scale(.98)}
+  .search-dialog[open]::backdrop{background:rgba(0,0,0,0)}
+}
+.search-field{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface);color:var(--ink);
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 12px 12px 14px;
+}
+.search-ico{flex:none;display:flex;color:var(--ink-2)}
+.search-field input{
+  flex:1;min-width:0;border:0;outline:none;background:transparent;color:var(--ink);
+  font:inherit;font-size:15px;
+}
+.search-field input::placeholder{color:var(--ink-3)}
+/* 文章页（无卡片流）搜索结果：在当前页内联展示，不返回首页 */
+.search-results{margin-top:14px;max-height:58vh;overflow:auto;-webkit-overflow-scrolling:touch}
+.search-results[hidden]{display:none}
+.search-loading,.search-empty{margin:0;padding:6px 2px;font-size:13px;color:var(--ink-3)}
+.search-result-list{list-style:none;margin:0;padding:0}
+.search-result{display:block;padding:12px 2px;border-bottom:1px solid var(--line);text-decoration:none;color:inherit}
+.search-result:last-child{border-bottom:0}
+.search-result-title{display:block;font-size:14px;font-weight:600;color:var(--ink);line-height:1.5}
+.search-result-meta{display:block;margin-top:4px;font-size:12px;color:var(--ink-3)}
+.search-result-excerpt{display:block;margin-top:4px;font-size:12px;color:var(--ink-2);line-height:1.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.search-result:hover .search-result-title{text-decoration:underline}
+/* 下拉 / 弹窗里的「查看全部结果」：通往搜索页（search.php） */
+.search-more{
+  display:block;margin-top:10px;padding-top:11px;border-top:1px solid var(--line);
+  font-size:13px;color:var(--ink);text-align:center;transition:color .2s;
+}
+.search-more:hover,.search-more:focus-visible{color:var(--ink-2)}
+/* ---- 搜索页（search.php）：关键词 + 改词重搜 + 卡片流 ---- */
+.search-page-q{margin:0 0 14px;font-size:13px;line-height:1.7;color:var(--ink-2)}
+.search-page-q strong{font-weight:600;color:var(--ink)}
+.search-page-form{
+  display:flex;align-items:center;gap:10px;
+  max-width:520px;height:48px;margin:0 0 26px;padding:0 6px 0 14px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  transition:border-color .2s ease,border-radius .28s var(--ease);
+}
+.search-page-form:focus-within{border-color:var(--ink)}
+.search-page-ico{flex:none;display:flex;color:var(--ink-2)}
+.search-page-form input{
+  flex:1;min-width:0;height:100%;border:0;outline:none;background:transparent;color:var(--ink);
+  font:inherit;font-size:14px;
+}
+.search-page-form input::placeholder{color:var(--ink-3)}
+.search-page-form input::-webkit-search-cancel-button{display:none}
+.search-page-form .link-btn{flex:none;height:36px;padding:0 16px}
+.search-page-empty{padding:26px 0 10px}
+/* 空态在卡片网格里要跨满整行，不能被挤成一列 */
+.feed>.empty-state{grid-column:1/-1}
+.search-page-tips-label{margin:2px 0 12px;font-size:12px;color:var(--ink-3)}
+.search-page-tips{justify-content:center}
+.search-close{
+  flex:none;display:flex;align-items:center;justify-content:center;
+  width:34px;height:34px;padding:0;border:0;border-radius:calc(var(--radius) - 4px);
+  background:transparent;color:var(--ink-3);cursor:pointer;
+  transition:color .2s ease,background-color .2s ease;
+}
+.search-close:hover,.search-close:focus-visible{color:var(--ink);background:var(--bg)}
+
+/* ============================================================
+   命令面板（0.12.0 ⌘K）：命令 + 文章搜索合一，居中卡片。
+   结构对齐搜索弹窗：同一套进出场动画 / backdrop / is-closing。
+   ============================================================ */
+.pk-cmdk{
+  width:min(560px,calc(100vw - 32px));
+  top:0;right:0;bottom:auto;left:0;
+  margin:calc(env(safe-area-inset-top,0px) + 12vh) auto 0;
+  padding:0;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface);color:var(--ink);overflow:hidden;
+  opacity:0;transform:translateY(-14px) scale(.98);
+  transition:opacity .24s ease,transform .24s ease,
+             background-color .5s ease,color .5s ease;
+}
+.pk-cmdk:not([open]){display:none}
+.pk-cmdk[open]{opacity:1;transform:translateY(0) scale(1)}
+.pk-cmdk[open].is-closing{opacity:0;transform:translateY(-14px) scale(.98)}
+.pk-cmdk::backdrop{background:rgba(0,0,0,0);transition:background-color .24s ease}
+.pk-cmdk[open]::backdrop{background:rgba(0,0,0,.3)}
+.pk-cmdk[open].is-closing::backdrop{background:rgba(0,0,0,0)}
+@starting-style{
+  .pk-cmdk[open]{opacity:0;transform:translateY(-14px) scale(.98)}
+  .pk-cmdk[open]::backdrop{background:rgba(0,0,0,0)}
+}
+.cmdk-field{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 12px 12px 14px;
+  border-bottom:1px solid var(--line);
+}
+.cmdk-ico{flex:none;display:flex;color:var(--ink-2)}
+.cmdk-field input{
+  flex:1;min-width:0;border:0;outline:none;background:transparent;color:var(--ink);
+  font:inherit;font-size:15px;
+}
+.cmdk-field input::placeholder{color:var(--ink-3)}
+/* AI 开关：胶囊按钮，开启时黑底白字（与全站按钮语言一致） */
+.cmdk-ai{
+  flex:none;display:flex;align-items:center;gap:4px;height:26px;padding:0 9px;
+  border:1px solid var(--line);border-radius:999px;background:transparent;
+  color:var(--ink-2);font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.04em;
+  cursor:pointer;
+  transition:color .2s ease,border-color .2s ease,background-color .2s ease;
+}
+.cmdk-ai:hover,.cmdk-ai:focus-visible{color:var(--ink);border-color:var(--ink)}
+.cmdk-ai[aria-pressed="true"]{color:var(--surface);background:var(--ink);border-color:var(--ink)}
+.cmdk-ai-ico{flex:none;display:flex}
+.cmdk-ai.is-busy{opacity:.6;cursor:progress}
+.cmdk-esc{
+  flex:none;display:inline-flex;align-items:center;height:20px;padding:0 6px;
+  border:1px solid var(--line);border-radius:6px;
+  font-family:inherit;font-size:10px;color:var(--ink-3);pointer-events:none;
+}
+.cmdk-list{max-height:46vh;overflow:auto;-webkit-overflow-scrolling:touch;padding:6px 0}
+.cmdk-group{padding:10px 16px 4px;font-size:11px;color:var(--ink-3);letter-spacing:.08em}
+.cmdk-item{
+  display:flex;align-items:center;gap:12px;width:100%;
+  margin:0;padding:10px 16px;border:0;
+  background:transparent;color:var(--ink);text-align:left;text-decoration:none;
+  font:inherit;font-size:14px;line-height:1.5;cursor:pointer;
+}
+.cmdk-item:hover{background:var(--soft)}
+.cmdk-item.is-active{background:var(--soft)}
+.cmdk-item-ico{flex:none;display:flex;color:var(--ink-2)}
+.cmdk-item-main{flex:1;min-width:0}
+.cmdk-item-title{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.cmdk-item-meta{display:block;margin-top:2px;font-size:12px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmdk-status,.cmdk-empty{margin:0;padding:14px 16px;font-size:13px;color:var(--ink-3)}
+.cmdk-foot{
+  display:flex;align-items:center;gap:14px;
+  padding:9px 16px;border-top:1px solid var(--line);
+  font-size:11px;color:var(--ink-3);
+}
+.cmdk-foot kbd{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:18px;padding:0 4px;margin-right:4px;
+  border:1px solid var(--line);border-radius:5px;
+  font-family:inherit;font-size:10px;color:var(--ink-2);
+}
+.cmdk-brand{margin-left:auto;letter-spacing:.16em;font-weight:600;color:var(--ink-3)}
+
+/* ============================================================
+   信息流头
+   ============================================================ */
+.feed-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 18px}
+.feed-head h1{margin:0;font-size:13px;font-weight:500;letter-spacing:.08em;color:var(--ink-2)}
+.feed-head .hint{font-size:12px;color:var(--ink-3)}
+.empty-state{text-align:center}
+.empty-state p{font-size:13px;color:var(--ink-3);margin:18px 0}
+
+/* ============================================================
+   简约卡片：图片 / 标题 / 分类 / 时间
+   ============================================================ */
+.feed{display:flex;flex-direction:column;gap:30px}
+.card{display:block;width:100%;background:transparent;border:0;padding:0;cursor:pointer;transition:transform .28s var(--ease)}
+.card.is-hidden{display:none}
+.card-visual{
+  width:100%;height:auto;aspect-ratio:4/3;overflow:hidden;
+  border-radius:var(--radius);background:var(--soft);
+}
+.card-visual svg,.card-visual img{width:100%;height:100%;display:block;object-fit:cover}
+/* 三宫格 / 金句卡同样固定 4:3，所有卡片视觉块等高，栅格才齐。
+   4:3 下三张等分会变成细长条，改为「左大图 + 右侧两张竖排」拼贴 */
+.card-visual.thumbs{
+  display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:5px;
+  aspect-ratio:4/3;background:none;
+}
+.card-visual.thumbs .thumb{border-radius:var(--radius);overflow:hidden;min-width:0;height:100%}
+.card-visual.thumbs .thumb:first-child{grid-row:1 / span 2}
+.card-visual.thumbs .thumb svg,.card-visual.thumbs .thumb img{width:100%;height:100%}
+.card-visual.quote{
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  aspect-ratio:4/3;font-size:16px;line-height:1.7;text-align:center;
+}
+.card-visual.quote span{max-width:22em}
+.card:hover,.card:focus-visible{transform:scale(1.04)}
+.card:hover .card-visual{opacity:.9}
+/* 减少动态效果时不放大，保留原有的图片变淡反馈 */
+@media (prefers-reduced-motion: reduce){.card:hover,.card:focus-visible{transform:none}}
+.card-title{margin:12px 0 5px;font-size:17px;font-weight:600;line-height:1.5;letter-spacing:.01em}
+/* 元信息文字用次级灰 #666：#999 在白底上对比度仅 2.84，不满足 WCAG AA 4.5 */
+.card-meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-2);letter-spacing:.04em}
+.card-meta .dot,.detail-meta .dot{width:3px;height:3px;border-radius:50%;background:var(--ink-3)}
+.no-result{display:none;padding:44px 0;text-align:center;color:var(--ink-3);font-size:14px}
+.no-result.show{display:block}
+
+/* ============================================================
+   首页订阅卡片：浅灰大卡，左文右表单
+   表单整体是一枚白色胶囊，输入框透明，黑色胶囊按钮压在右端
+   ============================================================ */
+.pk-sub{
+  display:grid;gap:18px;margin:26px 0 8px;padding:22px 20px 24px;
+  background:var(--soft);border-radius:var(--radius);
+}
+.pk-sub-title{margin:0;font-size:18px;font-weight:600;line-height:1.4;letter-spacing:.01em}
+.pk-sub-desc{margin:6px 0 0;font-size:13px;line-height:1.7;color:var(--ink-2)}
+.pk-sub-form{
+  display:flex;align-items:center;gap:6px;min-width:0;
+  padding:5px 5px 5px 16px;border:1px solid transparent;border-radius:999px;background:var(--bg);
+  transition:border-color .2s ease;
+}
+.pk-sub-form:focus-within{border-color:var(--line)}
+.pk-sub-field{flex:1 1 auto;min-width:0;display:flex}
+/* 屏读用标签，视觉隐藏 */
+.pk-sub-sr{
+  position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+}
+.pk-sub-field input{
+  width:100%;min-width:0;height:40px;padding:0;border:0;background:transparent;
+  color:var(--ink);font:inherit;font-size:14px;line-height:40px;
+}
+.pk-sub-field input::placeholder{color:var(--ink-3)}
+.pk-sub-field input:focus{outline:none}
+.pk-sub-btn{
+  flex:none;display:inline-flex;align-items:center;justify-content:center;
+  height:40px;padding:0 20px;border:0;border-radius:999px;
+  background:var(--ink);color:var(--bg);font:inherit;font-size:13px;font-weight:500;
+  letter-spacing:.02em;cursor:pointer;transition:opacity .2s ease;
+}
+.pk-sub-btn:hover{opacity:.82}
+.pk-sub-btn:disabled{opacity:.5;cursor:default}
+/* 成功后表单收起，原位置换成一行确认文案 */
+.pk-sub.is-done .pk-sub-form{display:none}
+.pk-sub-done{
+  display:flex;align-items:center;gap:8px;margin:0;
+  font-size:13px;line-height:1.7;color:var(--ink);
+}
+.pk-sub-done[hidden]{display:none}
+/* 成功标记：一个小实心圆点，黑白体系里不用彩色勾 */
+.pk-sub-done::before{content:"";width:6px;height:6px;flex:none;border-radius:50%;background:var(--ink)}
+.pk-sub-msg{margin:0;font-size:12.5px;line-height:1.6;color:var(--ink-2)}
+.pk-sub-msg:empty{display:none}
+/* 主题不引入红色：错误态用正文黑加粗，和次要灰拉开层次 */
+.pk-sub-msg.is-error{color:var(--ink);font-weight:500}
+@media (min-width:768px){
+  .pk-sub-form{max-width:440px}
+}
+@media (min-width:1024px){
+  .pk-sub{
+    grid-template-columns:1fr auto;align-items:center;
+    column-gap:48px;row-gap:10px;margin:34px 0 10px;padding:30px 34px;
+  }
+  .pk-sub-copy{grid-column:1;min-width:0}
+  .pk-sub-title{font-size:20px}
+  .pk-sub-desc{margin-top:7px;font-size:13.5px}
+  .pk-sub-form{grid-column:2;width:420px;max-width:none;padding:6px 6px 6px 20px}
+  .pk-sub-field input{height:44px;line-height:44px}
+  .pk-sub-btn{height:44px;padding:0 24px}
+  .pk-sub-done{grid-column:2;justify-self:end}
+  .pk-sub-msg{grid-column:1/-1}
+}
+
+/* ============================================================
+   首页幻灯片：一屏一卡，自动轮播
+   PC 左文右图；手机图上文下（0.13.5 起补上），左右滑动切张
+   ============================================================ */
+.pk-slide-dots{display:none}
+/* 屏读播报：切张时更新，视觉上不显示（PC / 手机共用） */
+.pk-slides-live{
+  position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+}
+@media (min-width:1024px){
+  .pk-slides{
+    display:block;position:relative;margin:0 0 30px;
+    border-radius:var(--radius);overflow:hidden;background:var(--soft);
+  }
+  /* 下面紧跟公告栏时收紧间距，两块合起来才不至于太散 */
+  .pk-slides:has(+ .pk-ticker){margin-bottom:12px}
+  /* 舞台：卡片全部叠在同一格里，超出即裁切
+     切换仿 Swiper 的 creative：新卡从一侧 120% 处滑进来盖住旧卡，
+     旧卡不同步横移，只在原地缩小 8%、抬高 10px、后退 1px「往后收」 */
+  .pk-slides-track{
+    /* 高度由 JS 按最长一条文字算出来写进 --pk-slide-h（420~520），
+       没 JS 时退回 440px，避免整块空白 */
+    position:relative;height:var(--pk-slide-h,440px);overflow:hidden;
+    border-radius:var(--radius);perspective:1200px;
+  }
+  .pk-slide{
+    position:absolute;inset:0;display:flex;min-width:0;background:var(--soft);
+    border-radius:var(--radius);
+    opacity:0;z-index:1;transform:translate3d(120%,0,0);transform-origin:50% 50%;
+    will-change:transform,opacity;
+  }
+  /* 当前张：满幅、实心、可点 */
+  .pk-slide.is-active{opacity:1;z-index:3;transform:none;pointer-events:auto}
+  /* 退场张：原地缩小 + 抬高 10px + 后退 1px，看起来像是被压到后面去 */
+  .pk-slide.is-out{
+    opacity:1;z-index:2;pointer-events:none;
+    transform:translate3d(0,-10px,-1px) scale(.92);
+    transition:transform .6s ease;
+  }
+  /* 入场张：从舞台外侧滑到位，全程压在最上层 */
+  .pk-slide.is-in{
+    opacity:1;z-index:4;
+    transition:transform .6s ease;
+  }
+  /* 非当前张不再接收点击 / 键盘焦点（inert 由 JS 随索引同步） */
+  .pk-slide[inert]{pointer-events:none}
+  /* 文字组整体垂直居中（略偏上）：标题在中上部、按钮紧跟描述下方，中间不留空洞 */
+  .pk-slide-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;padding:28px 38px 32px}
+  .pk-slide-kicker{
+    margin:0 0 10px;display:flex;align-items:center;gap:8px;
+    font-size:12px;color:var(--ink-3);letter-spacing:.04em;
+  }
+  .pk-slide-kicker .dot{width:3px;height:3px;flex:none;border-radius:50%;background:var(--ink-3)}
+  .pk-slide-title{
+    margin:0 0 12px;color:var(--ink);
+    font-size:clamp(25px,2.6vw,36px);font-weight:600;line-height:1.3;letter-spacing:-.01em;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .pk-slide-title a{color:var(--ink);transition:color .2s ease}
+  .pk-slide-title a:hover{color:var(--ink-2)}
+  .pk-slide-desc{
+    margin:0 0 26px;max-width:36em;
+    font-size:14px;line-height:1.85;color:var(--ink-2);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .pk-slide-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  /* 主按钮：黑底白字胶囊，与「阅读更多 →」一致；a 形态要压过 body.pk-body a 的继承色 */
+  body.pk-body a.pk-slide-more{
+    display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 20px;
+    border-radius:999px;background:var(--ink);color:var(--bg);
+    font-size:13px;font-weight:500;letter-spacing:.02em;transition:opacity .2s ease;
+  }
+  .pk-slide-more:hover{opacity:.82}
+  .pk-slide-more .pk-icon{transition:transform .28s var(--ease)}
+  .pk-slide-more:hover .pk-icon{transform:translateX(3px)}
+  .pk-slide-ctrl{display:flex;align-items:center;gap:2px;flex:none}
+  .pk-slides.is-single .pk-slide-ctrl{display:none}
+  .pk-slide-arrow{
+    width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;
+    padding:0;border:0;border-radius:50%;background:transparent;color:var(--ink-2);
+    cursor:pointer;transition:color .2s ease,background-color .2s ease;
+  }
+  .pk-slide-arrow:hover,.pk-slide-arrow:focus-visible{color:var(--ink);background:rgba(0,0,0,.06)}
+  :root[data-theme="dark"] .pk-slide-arrow:hover,
+  :root[data-theme="dark"] .pk-slide-arrow:focus-visible{background:rgba(255,255,255,.10)}
+  .pk-slide-media{
+    flex:0 0 44%;position:relative;display:block;min-width:0;
+    overflow:hidden;background:var(--bg);
+  }
+  .pk-slide-media img,.pk-slide-media svg{width:100%;height:100%;display:block;object-fit:cover}
+}
+/* 手机端（0.13.8）：整张卡就是一幅图，标题 / 摘要 / 按钮压在图上，
+   高度改用 clamp 收窄，不再由 JS 按文字算高；左右滑动 + 圆点指示 */
+@media (max-width:1023.98px){
+  .pk-slides{
+    display:block;position:relative;margin:12px 0 20px;
+    border-radius:var(--radius);overflow:hidden;background:var(--soft);
+    touch-action:pan-y;
+  }
+  /* 与公告栏相邻时收紧，和 PC 一致 */
+  .pk-slides:has(+ .pk-ticker){margin-bottom:12px}
+  /* 卡高固定区间：390 宽约 257，最窄 238，平板兜 300 */
+  .pk-slides-track{
+    position:relative;height:clamp(238px,66vw,300px);overflow:hidden;
+    border-radius:var(--radius);perspective:1200px;
+  }
+  .pk-slide{
+    position:absolute;inset:0;display:block;min-width:0;background:var(--soft);
+    border-radius:var(--radius);
+    opacity:0;z-index:1;transform:translate3d(120%,0,0);
+    will-change:transform,opacity;
+  }
+  .pk-slide.is-active{opacity:1;z-index:3;transform:none;pointer-events:auto}
+  .pk-slide.is-out{
+    opacity:1;z-index:2;pointer-events:none;
+    transform:translate3d(0,-10px,-1px) scale(.92);
+    transition:transform .6s ease;
+  }
+  .pk-slide.is-in{opacity:1;z-index:4;transition:transform .6s ease}
+  .pk-slide[inert]{pointer-events:none}
+  /* 封面铺满整卡，文字层压在上面 */
+  .pk-slide-media{
+    position:absolute;inset:0;display:block;overflow:hidden;background:var(--bg);
+  }
+  .pk-slide-media img,.pk-slide-media svg{width:100%;height:100%;display:block;object-fit:cover}
+  /* 文字层压在图上：底部一条磨砂玻璃托底保证可读，不引入渐变 */
+  .pk-slide-body{
+    position:absolute;left:0;right:0;bottom:0;z-index:2;
+    display:flex;flex-direction:column;padding:12px 16px 14px;
+    background:rgba(0,0,0,.44);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  }
+  .pk-slide-kicker{margin:0 0 6px;font-size:11px;color:rgba(255,255,255,.78)}
+  .pk-slide-kicker .dot{background:rgba(255,255,255,.55)}
+  .pk-slide-title{
+    margin:0 0 6px;font-size:17px;font-weight:600;line-height:1.34;letter-spacing:-.01em;
+    color:#fff;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .pk-slide-title a{color:#fff}
+  .pk-slide-desc{
+    margin:0 0 12px;font-size:12px;line-height:1.6;color:rgba(255,255,255,.82);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .pk-slide-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  /* 压在深色图上，按钮反白更清楚 */
+  body.pk-body a.pk-slide-more{
+    display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;
+    border-radius:999px;background:#fff;color:#111;
+    font-size:12px;font-weight:500;letter-spacing:.02em;
+  }
+  /* 手机端箭头换成圆点（手势 + 点按直达），压在卡片右下角 */
+  .pk-slide-ctrl{display:none}
+  .pk-slide-dots{
+    position:absolute;right:14px;bottom:26px;z-index:6;
+    display:flex;align-items:center;gap:6px;padding:0;
+  }
+  .pk-slide-dot{
+    width:5px;height:5px;padding:0;border:0;border-radius:999px;background:#fff;
+    opacity:.42;cursor:pointer;transition:width .25s var(--ease),opacity .25s ease;
+  }
+  .pk-slide-dot.is-on{opacity:1;width:14px}
+}
+@media (max-width:1023.98px) and (prefers-reduced-motion: reduce){
+  .pk-slide,.pk-slide.is-in,.pk-slide.is-out{transition:none}
+}
+@media (min-width:1024px) and (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .pk-slide-arrow:hover,
+  :root:not([data-theme="light"]) .pk-slide-arrow:focus-visible{background:rgba(255,255,255,.10)}
+}
+/* ============================================================
+   首页公告栏：幻灯片下方一条横向滚动带，悬停暂停
+   结构是「一份内容 + 一份副本」，动画走完 -50% 正好接回开头
+   ============================================================ */
+.pk-ticker{
+  display:flex;align-items:center;gap:10px;
+  height:40px;margin:0 0 22px;padding:0;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  background:none;border-radius:0;overflow:hidden;
+}
+/* 不显示标签时左右留白对等 */
+.pk-ticker.is-plain{padding-left:0}
+/* 标签改用纯文字 + 右侧竖线分隔：不再做胶囊底，免得和手机端分类 tab 撞样子 */
+.pk-ticker-tag{
+  flex:none;display:inline-flex;align-items:center;height:100%;padding:0 10px 0 0;
+  border-radius:0;background:none;color:var(--ink);
+  font-size:11px;font-weight:600;letter-spacing:.14em;
+  border-right:1px solid var(--line);
+}
+.pk-ticker-view{position:relative;flex:1 1 auto;min-width:0;overflow:hidden}
+/* 时长由 JS 按内容宽度回写，保证不同条目数量下速度一致 */
+.pk-ticker-track{
+  display:flex;width:max-content;
+  animation:pk-ticker-roll 32s linear infinite;will-change:transform;
+}
+.pk-ticker:hover .pk-ticker-track,
+.pk-ticker:focus-within .pk-ticker-track{animation-play-state:paused}
+.pk-ticker-group{display:flex;align-items:center;flex:none}
+.pk-ticker-item{
+  display:inline-flex;align-items:center;gap:9px;flex:none;
+  padding-right:44px;font-size:13px;line-height:1.5;color:var(--ink-2);white-space:nowrap;
+}
+/* a 形态：压过 body.pk-body a 的 color:inherit */
+body.pk-body a.pk-ticker-item{color:var(--ink-2);text-decoration:none;transition:color .2s ease}
+body.pk-body a.pk-ticker-item:hover{color:var(--ink)}
+/* 每条前面一个小圆点，代替分隔符 */
+.pk-ticker-item::before{content:"";width:3px;height:3px;flex:none;border-radius:50%;background:var(--ink-3)}
+@keyframes pk-ticker-roll{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+/* 关掉动效时不滚，退回手动横向拖动查看 */
+@media (prefers-reduced-motion: reduce){
+  .pk-ticker-track{animation:none}
+  .pk-ticker-view{overflow-x:auto;scrollbar-width:none}
+  .pk-ticker-view::-webkit-scrollbar{display:none}
+}
+@media (min-width:768px){
+  .pk-ticker{height:44px;margin-bottom:26px}
+  .pk-ticker-item{font-size:13.5px;padding-right:52px}
+}
+.site-foot{
+  margin-top:44px;padding-top:20px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--ink-2);display:flex;flex-direction:column;gap:14px;
+}
+.site-foot-nav{display:flex;flex-wrap:wrap;gap:8px 20px}
+.site-foot-link{color:var(--ink-2);text-decoration:none;transition:color .2s}
+.site-foot-link:hover,.site-foot-link:focus-visible{color:var(--ink)}
+/* a 形态链接：压过 body.pk-body a{color:inherit}，保证 hover 变深（勿违规则） */
+body.pk-body a.site-foot-link{color:var(--ink-2);text-decoration:none}
+body.pk-body a.site-foot-link:hover,body.pk-body a.site-foot-link:focus-visible{color:var(--ink)}
+.site-foot-meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+/* pjax 只交换 #swup-wrapper：页脚节点常驻，文章页用 hidden 同步显隐 */
+[data-pk-foot-wrap][hidden]{display:none!important}
+
+/* ============================================================
+   全屏阅读层：上留头部，左右与底部铺满
+   ============================================================ */
+/* 100vw 覆盖预留的滚动条槽，保证阅读层左右真正贴到视口边缘 */
+/* z-index 56：必须压过 .pc-aside(55) 否则 PC 端转场一结束侧栏就会盖回头图上；
+   同时低于 .site-head(60) 保持沉浸式顶栏可点 */
+/* 阅读层：PC 侧栏常驻时从侧栏右侧开始（收起 / 移动端 fallback 0 = 全宽），
+   顶部仍铺到 nav 后方（nav 全宽透明浮上） */
+/* left/width 跟 --sidebar-w 一起过渡：否则收起侧栏时阅读层瞬间跳位，和白块的收缩速度不一致 */
+.overlay{position:fixed;top:0;left:var(--sidebar-w,0px);right:auto;bottom:0;width:calc(100vw - var(--sidebar-w,0px));z-index:56;transition:left .28s var(--ease),width .28s var(--ease)}
+.overlay[hidden]{display:none}
+/* 封面从视口顶部开始，全透明的头部浮在封面之上 */
+.detail{
+  position:absolute;inset:0;
+  width:100%;overflow-y:auto;background:var(--surface);
+  border-top:0;
+}
+/* 底部给悬浮操作条留出空间，避免遮住正文 / 评论区末尾 */
+.detail-inner{padding-bottom:120px;min-height:100%}
+/* 0.13.24 文章底部按钮翻页：手机保留手势，PC（≥1024）才显示这两个按钮 */
+.pk-post-nav{display:none}
+.pk-post-nav-item{display:flex;align-items:center;gap:12px;min-width:0;padding:14px 16px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);color:var(--ink);text-decoration:none;transition:border-color .2s}
+.pk-post-nav-item:hover{border-color:var(--ink-2)}
+.pk-post-nav-item.is-next{justify-content:flex-end;text-align:right}
+.pk-post-nav-item.is-disabled{opacity:.45;cursor:default}
+.pk-post-nav-ico{flex:none;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid var(--line);border-radius:50%;color:var(--ink-2)}
+.pk-post-nav-ico svg{width:15px;height:15px}
+.pk-post-nav-body{min-width:0;display:flex;flex-direction:column;gap:3px}
+.pk-post-nav-label{font-size:11.5px;line-height:1.4;color:var(--ink-3)}
+.pk-post-nav-title{font-size:13.5px;font-weight:500;line-height:1.45;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (min-width:1024px){
+  .pk-post-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:40px 20px 0;padding:24px 0 0;border-top:1px solid var(--line)}
+}
+@media (min-width:1280px){
+  /* 与 .detail-grid 的两列总宽对齐，宽屏下按钮不会拉得比正文栏更宽 */
+  .pk-post-nav{max-width:1180px;margin-left:auto;margin-right:auto}
+}
+.detail-hero{position:relative;height:320px;overflow:hidden;background:var(--soft)}
+.detail-hero svg,.detail-hero img{width:100%;height:100%;display:block;object-fit:cover}
+
+/* 陀螺仪毛玻璃遮罩：JS 在倾斜时懒创建，模糊度 / 反光渐变随倾斜变化，回正即清空 */
+.hero-glass{position:absolute;inset:0;pointer-events:none}
+
+/* 多图封面：全宽图片带无缝横向缓慢滚动，复制一组帧配合 -50% 循环 */
+.detail-hero.marquee{position:relative;overflow:hidden}
+.hero-track{display:flex;width:max-content;height:100%;animation:pk-hero-scroll 30s linear infinite}
+.hero-slide{flex:0 0 var(--hero-w,100vw);width:var(--hero-w,100vw);height:100%;overflow:hidden}
+.detail-hero.marquee:hover .hero-track{animation-play-state:paused}
+@keyframes pk-hero-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+.detail-hero.quote{
+  display:flex;align-items:center;justify-content:center;
+  padding:calc(var(--head-h) + 30px) 20px 30px;
+  height:auto;min-height:320px;
+  font-size:20px;line-height:1.7;text-align:center;
+}
+.detail-hero.quote span{max-width:20em}
+.detail-body{padding:24px 20px 0}
+.detail-body h1{margin:0 0 10px;font-size:24px;font-weight:600;line-height:1.45;letter-spacing:.01em}
+.detail-meta{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);letter-spacing:.05em}
+/* 元信息 + 分享按钮同一行：分享用 margin-left:auto 贴右端，窄屏换行后依然靠右 */
+.detail-meta-row{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}
+.detail-meta{flex:1 1 auto;min-width:0}
+.detail-share{
+  flex:none;margin-left:auto;display:inline-flex;align-items:center;gap:5px;
+  padding:6px 12px;font-size:12px;line-height:1.2;letter-spacing:.02em;
+  color:var(--ink-2);background:transparent;
+  border:1px solid var(--line);border-radius:12px;
+  transition:color .2s var(--ease),border-color .2s var(--ease);
+}
+.detail-share:hover,.detail-share:focus-visible{color:var(--ink);border-color:var(--ink)}
+.prose{margin-top:22px;padding-top:22px;border-top:1px solid var(--line);font-size:15px;line-height:1.95;color:var(--ink)}
+.prose p{margin:0 0 18px}
+.prose p:last-child{margin-bottom:0}
+.prose h2{font-size:20px;margin:30px 0 12px}
+.prose h3{font-size:17px;margin:24px 0 10px}
+/* 目录锚点跳转留出固定顶栏高度，标题不被 nav 压住 */
+.prose h2,.prose h3{scroll-margin-top:84px}
+.prose blockquote{margin:22px 0;padding:2px 0 2px 18px;border-left:2px solid var(--ink);color:var(--ink-2)}
+.prose img{max-width:100%;height:auto;border-radius:var(--radius)}
+.prose ul,.prose ol{padding-left:22px;margin:0 0 18px}
+.prose a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+/* ---------- 正文基础标签：黑白体系里的统一实现，写作时直接写标签即可 ----------
+   只作用于 .prose（文章正文 / 信息页正文），不碰站点组件；全部用变量，深浅色自动适配。
+   排版标签页的示例区同样套 .prose，所以「看到的样子」=「文章里真实的样子」。 */
+.prose h4{font-size:15px;margin:20px 0 8px}
+.prose h5{font-size:14px;margin:18px 0 8px}
+.prose h6{font-size:13px;margin:16px 0 8px;letter-spacing:.04em;color:var(--ink-2)}
+.prose h4,.prose h5,.prose h6{font-weight:600;line-height:1.5}
+.prose strong{font-weight:600}
+.prose em{font-style:italic}
+.prose small{font-size:.85em;color:var(--ink-3)}
+.prose mark{padding:1px 4px;border-radius:5px;background:var(--soft);color:var(--ink)}
+.prose del,.prose s{color:var(--ink-3);text-decoration:line-through}
+.prose ins{text-decoration:underline;text-underline-offset:3px}
+.prose sup,.prose sub{font-size:.7em;line-height:0}
+.prose ruby rt{font-size:.6em;color:var(--ink-3);letter-spacing:0}
+.prose kbd{display:inline-block;padding:1px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82em;line-height:1.6;color:var(--ink)}
+.prose :not(pre)>code{padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:var(--soft);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86em;color:var(--ink)}
+.prose pre{margin:18px 0;padding:14px 16px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.75;tab-size:2}
+.prose pre code{padding:0;border:0;background:none;font:inherit}
+.prose hr{margin:28px 0;padding:0;border:0;border-top:1px solid var(--line)}
+.prose li{margin:0 0 4px}
+.prose li>ul,.prose li>ol{margin:4px 0 0}
+.prose figure{margin:22px 0}
+.prose figcaption{margin-top:8px;font-size:12px;line-height:1.7;color:var(--ink-3);text-align:center}
+.prose table{width:100%;margin:18px 0;border-collapse:collapse;font-size:13.5px;line-height:1.7}
+.prose th,.prose td{padding:8px 12px;border:1px solid var(--line);text-align:left;vertical-align:top}
+.prose th{background:var(--soft);font-weight:600}
+.prose details{margin:18px 0;padding:12px 16px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.prose summary{cursor:pointer;font-size:14px;font-weight:600}
+.prose details[open] summary{margin-bottom:10px}
+/* 正文末尾版权声明：浅底描边卡片，不抢正文，不用阴影 / 图标之外的装饰 */
+.pk-copyright{
+  margin:34px 0 0;padding:18px 20px;
+  background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);
+  font-size:13px;line-height:1.9;color:var(--ink-2);
+}
+.pk-copyright-title{
+  display:flex;align-items:center;gap:7px;margin:0 0 8px;
+  font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--ink);
+}
+.pk-copyright-title .pk-icon{width:15px;height:15px;flex:none}
+.pk-copyright p{margin:0 0 6px}
+.pk-copyright p:last-of-type{margin-bottom:0}
+.pk-copyright strong{font-weight:600;color:var(--ink)}
+.pk-copyright a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.pk-copyright-meta{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-3)}
+/* 评论区：PC 是右侧抽屉（默认移出视口，点悬浮条「评论」时滑入）；
+   手机端改为抖音式底部半屏面板，可拖顶部栏调整高度（见文件下方 @media）。
+   列表是聊天气泡。 */
+.detail-comments{
+  position:fixed;top:0;right:0;bottom:0;z-index:130;
+  width:min(440px,100%);max-width:none;margin:0;padding:0;
+  display:flex;flex-direction:column;
+  background:var(--bg);border-top:0;border-left:1px solid var(--line);
+  transform:translateX(100%);opacity:0;visibility:hidden;
+  transition:transform .36s var(--ease),opacity .36s var(--ease),visibility 0s linear .36s;
+  will-change:transform;
+}
+/* 抽屉在 .overlay 的层叠上下文里，而顶栏 z-index 60 高于 overlay 的 56：
+   开抽屉时把整个 overlay 提到顶栏之上，抽屉与遮罩才能压住顶栏 */
+html.pk-comments-open .overlay{z-index:140}
+html.pk-comments-open .detail-comments{
+  transform:none;opacity:1;visibility:visible;
+  transition:transform .36s var(--ease),opacity .36s var(--ease),visibility 0s;
+}
+/* 抽屉背后的毛玻璃遮罩 */
+.pk-drawer-backdrop{
+  position:fixed;inset:0;z-index:125;
+  background:var(--veil);opacity:0;pointer-events:none;
+  -webkit-backdrop-filter:blur(14px) saturate(115%);
+  backdrop-filter:blur(14px) saturate(115%);
+  transition:opacity .32s var(--ease);
+}
+.pk-drawer-backdrop[hidden]{display:none}
+html.pk-comments-open .pk-drawer-backdrop{opacity:1;pointer-events:auto}
+.comments-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none;
+  padding:16px 18px;border-bottom:1px solid var(--line);
+}
+.comments-title{margin:0;font-size:15px;font-weight:600;letter-spacing:.04em}
+.comments-title span{margin-left:4px;color:var(--ink-3);font-weight:400;font-size:13px}
+.comments-close{
+  display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex:none;
+  padding:0;border:0;background:transparent;color:var(--ink-2);border-radius:var(--radius);
+  cursor:pointer;transition:color .2s;
+}
+.comments-close:hover{color:var(--ink)}
+.comments-close .pk-icon{width:18px;height:18px}
+/* 中段：可滚动气泡列表 */
+.comments-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:20px 18px}
+.comment-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:18px}
+/* 0.13.19 最多两级：二级回复缩进到一级评论下方，一条 1px 竖线标出对话分支 */
+.comment-children{
+  list-style:none;margin:8px 0 0;padding:0 0 0 12px;
+  border-left:1px solid var(--line);
+  display:flex;flex-direction:column;gap:12px;width:100%;
+}
+.comment-children .comment-avatar{width:24px;height:24px;font-size:11px}
+.comment-children .comment-main{max-width:calc(100% - 33px)}
+.comment-children .comment-bubble{padding:8px 11px}
+.comment-children .comment-text{font-size:13px;line-height:1.7}
+/* 所有评论一律靠左、白底黑字气泡（深色模式自动反成黑底白字），
+   抽屉底色也是 --bg，所以气泡靠 1px 描边与背景区分，不用填充色 */
+.comment-item{display:flex;align-items:flex-start;gap:9px;padding:0;border:0}
+.comment-avatar{
+  display:flex;align-items:center;justify-content:center;flex:none;
+  width:30px;height:30px;border-radius:50%;
+  background:var(--soft);color:var(--ink-2);font-size:12px;font-weight:600;
+}
+.comment-main{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0;max-width:calc(100% - 39px)}
+.comment-head{display:flex;align-items:center;gap:6px;padding:0 2px;font-size:12px;color:var(--ink-2)}
+.comment-author{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.comment-head strong{font-size:12px;font-weight:600;color:var(--ink)}
+.comment-bubble{
+  max-width:100%;padding:10px 13px;
+  background:var(--bg);color:var(--ink);
+  border:1px solid var(--line);
+  border-radius:var(--radius);border-top-left-radius:4px;
+}
+/* 深色下抽屉底色是纯黑，气泡用 --soft 抬一层，避免黑白糊在一起 */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .comment-bubble{background:var(--soft)}
+}
+:root[data-theme="dark"] .comment-bubble{background:var(--soft)}
+.comment-text{font-size:14px;line-height:1.75;color:inherit;word-break:break-word}
+.comment-bubble time{display:block;margin-top:5px;font-size:11px;letter-spacing:.02em;color:var(--ink-2)}
+/* 回复目标标记 + 每条评论的回复按钮 */
+.comment-reply-name{font-size:11px;color:var(--ink-3);white-space:nowrap}
+.comment-actions{margin-top:1px}
+.comment-reply-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 4px;border:0;border-radius:6px;background:transparent;
+  color:var(--ink-3);font-size:11px;line-height:1.4;cursor:pointer;transition:color .2s;
+}
+.comment-reply-btn:hover,.comment-reply-btn:focus-visible{color:var(--ink)}
+.comment-reply-btn .pk-icon{width:12px;height:12px}
+/* 输入框上方的「正在回复 @某人」条 */
+#respond .comment-reply-bar{
+  display:flex;flex:0 0 100%;align-items:center;justify-content:space-between;gap:8px;
+  margin:0 0 2px;padding:8px 10px;
+  background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);
+  font-size:12px;color:var(--ink-2);
+}
+#respond .comment-reply-bar[hidden]{display:none}
+.comment-reply-bar-text strong{color:var(--ink);font-weight:600}
+.comment-reply-cancel{
+  display:inline-flex;align-items:center;gap:4px;flex:none;
+  padding:2px 4px;border:0;background:transparent;color:var(--ink-3);
+  font-size:11px;cursor:pointer;border-radius:6px;transition:color .2s;
+}
+.comment-reply-cancel:hover{color:var(--ink)}
+.comment-reply-cancel .pk-icon{width:12px;height:12px}
+/* 尾段：输入框吸底 */
+.comments-form-wrap{
+  flex:none;padding:14px 18px calc(14px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--line);background:var(--bg);
+}
+/* 留了个人网站的评论者：名字旁的外链图标，走中转页、新标签打开 */
+.comment-site{
+  display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
+  color:var(--ink-3);border-radius:var(--radius);transition:color .2s;
+}
+.comment-site:hover{color:var(--ink)}
+.comment-site .pk-icon{width:13px;height:13px}
+.comment-text{margin-top:8px;font-size:14px;line-height:1.8;color:var(--ink)}
+.comment-empty{display:none;margin:0 0 22px;font-size:13px;color:var(--ink-3)}
+.detail-comments.is-empty .comment-empty{display:block}
+.detail-comments.is-empty .comment-list{display:none}
+/* 顶部拖拽把手：只在手机端出现（PC 是右侧抽屉，没有拖拽） */
+.comments-grab{display:none}
+
+/* 手机端（≤1023）：评论区从底部升起，默认约六成屏高，拖动顶部栏可拉高 / 压低，
+   松手吸附到「半屏」或「近满屏」，拖得太低就收起。
+   高度走 --cm-h（默认 62vh，拖拽与吸附时由 app.js 写成 px）。 */
+@media (max-width:1023px){
+  .detail-comments{
+    top:auto;left:0;right:0;bottom:0;
+    width:100%;height:var(--cm-h,62vh);
+    border-left:0;border-top:1px solid var(--line);
+    border-radius:var(--radius) var(--radius) 0 0;
+    transform:translateY(100%);overflow:hidden;
+    transition:transform .34s var(--ease),opacity .34s var(--ease),visibility 0s linear .34s;
+  }
+  html.pk-comments-open .detail-comments{
+    transform:none;
+    transition:transform .34s var(--ease),opacity .34s var(--ease),height .26s var(--ease),visibility 0s;
+  }
+  /* 拖拽中关掉过渡，否则高度会追着手指慢半拍 */
+  .detail-comments.is-dragging,
+  html.pk-comments-open .detail-comments.is-dragging{transition:none}
+  .comments-grab{
+    display:block;position:absolute;top:7px;left:50%;
+    width:38px;height:4px;margin:0;border-radius:2px;
+    background:rgba(128,128,128,.45);
+    transform:translateX(-50%);
+  }
+  /* 整条标题栏都能拖；touch-action:none 让浏览器别把这次手势当滚动 */
+  .comments-bar{padding:22px 18px 12px;touch-action:none;cursor:grab}
+  .detail-comments.is-dragging .comments-bar{cursor:grabbing}
+  /* 面板只占下半屏，上方正文要看得见，遮罩从毛玻璃改成轻纱 */
+  .pk-drawer-backdrop{
+    -webkit-backdrop-filter:blur(3px) saturate(110%);
+    backdrop-filter:blur(3px) saturate(110%);
+  }
+}
+#respond #reply-title{display:none}
+#respond p{margin:0 0 10px}
+#respond .comment-form-cookies-consent{display:none}
+/* 一行评论框 + 一行「发表评论」；0.13.19 起不再有「完善信息」工具行 */
+#respond form.comment-form{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+#respond .comment-form-comment,#respond .form-submit,#respond .comment-login-tip{margin:0}
+#respond .comment-form-comment{flex:0 0 100%}
+#respond .form-submit{flex:0 0 auto}
+#respond textarea{
+  display:block;width:100%;padding:10px 12px;background:var(--surface);color:var(--ink);
+  border:1px solid var(--line);border-radius:var(--radius);
+  font:inherit;font-size:14px;line-height:1.7;
+}
+/* 评论框默认只是一条单行小输入框，占空间最小；点击 / 聚焦后展开成多行，
+   同时露出发表按钮。滑块还要再等一次提交才出现。 */
+#respond textarea{
+  height:42px;min-height:42px;padding:9px 12px;resize:none;overflow:hidden;
+  transition:height .26s var(--ease),min-height .26s var(--ease),border-color .2s;
+}
+#respond .comment-form.is-expanded textarea{height:auto;min-height:96px;resize:vertical;overflow:auto}
+#respond .comment-form:not(.is-expanded) .form-submit{display:none}
+.pk-cap[hidden]{display:none}
+#respond textarea:focus,#respond input:focus{outline:none;border-color:var(--ink-2)}
+/* 0.13.19：游客不再填写称呼/邮箱/网站，只给一条登录引导，点它就地打开登录弹窗 */
+#respond .comment-login-tip{flex:1 1 auto;min-width:0}
+.comment-login-link{
+  display:inline-flex;align-items:center;padding:8px 12px;
+  color:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);
+  font-size:12px;line-height:1.4;text-decoration:none;transition:color .2s,border-color .2s;
+}
+.comment-login-link:hover{color:var(--ink);border-color:var(--ink-2)}
+.comment-submit{
+  display:inline-flex;align-items:center;justify-content:center;padding:9px 18px;
+  background:var(--ink);color:var(--bg);border:1px solid var(--ink);border-radius:var(--radius);
+  font-size:13px;cursor:pointer;transition:opacity .2s;
+}
+.comment-submit:hover{opacity:.82}
+
+/* 文章操作条：全部纯图标、无文字。收藏已合并进点赞，只剩点赞 / 评论 / 分享。
+   PC：底部居中的毛玻璃胶囊，横排（返回列表 + 置顶 + 动作组）。
+   手机：右侧贴边的竖排动作栏——置顶单独一个圆浮在组上方，下面是一整块
+   固定在一起的点赞 / 评论 / 分享，点赞与评论在图标下方带计数。
+   仍不加阴影，靠 1px 半透明描边勾出边界。 */
+.pk-dock{
+  /* 50vw 而非 50%：页面常驻滚动条槽，50% 会相对内容区偏左半个 gutter */
+  position:fixed;left:calc((100vw + var(--sidebar-w,0px))/2);bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  z-index:70;display:flex;align-items:center;gap:4px;padding:6px;
+  background:var(--dock-bg);color:var(--ink);border:1px solid var(--dock-line);border-radius:22px;
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  backdrop-filter:blur(18px) saturate(160%);
+  /* 不要让长按选中图标或弹系统菜单 */
+  touch-action:manipulation;
+  -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none;
+  transition:opacity .2s ease,left .28s var(--ease),background-color .3s ease,border-color .3s ease;
+}
+@supports (translate:0 0){
+  .pk-dock{
+    transform:none;translate:-50% 0;
+    transition:opacity .2s ease,left .32s var(--ease),translate .32s var(--ease),background-color .3s ease,border-color .3s ease;
+  }
+}
+/* 点赞 / 评论 / 分享是一组：PC 里是胶囊中的横排一节，手机里是同一块竖排胶囊 */
+.dock-group{display:flex;align-items:center;gap:4px}
+.dock-btn,body.pk-body a.dock-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:46px;height:46px;padding:0;
+  background:transparent;color:inherit;border:0;border-radius:16px;
+  text-decoration:none;cursor:pointer;
+  transition:background-color .18s ease,opacity .2s;
+}
+.dock-btn:hover,body.pk-body a.dock-btn:hover{background:rgba(128,128,128,.14)}
+.dock-btn:active,body.pk-body a.dock-btn:active{background:rgba(128,128,128,.22)}
+.dock-btn .pk-icon{width:20px;height:20px;pointer-events:none}
+/* 计数：PC 隐藏，手机端在图标下方 */
+.dock-count{display:none;font-size:10px;line-height:1;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+/* 已点赞：图标填实，不引入彩色，保持全站黑白 */
+.dock-btn.is-on{background:rgba(128,128,128,.16)}
+.dock-btn.is-on .pk-icon{fill:currentColor;animation:pkDockPop .26s var(--ease)}
+@keyframes pkDockPop{0%{scale:1}45%{scale:.82}100%{scale:1}}
+/* 返回列表：只有从首页卡片流展开的阅读层才有「列表」可回；直接访问独立页不显示。
+   选择器必须压过上面的 body.pk-body a.dock-btn（它是 a 形态按钮） */
+body.pk-body .pk-dock a.dock-back{display:none}
+html.reading body.pk-body .pk-dock a.dock-back{display:inline-flex}
+/* 返回上一页：只在手机端出现（PC 胶囊里已经有「返回列表」，不重复） */
+body.pk-body .pk-dock a.dock-prev{display:none}
+/* 返回顶部：默认隐藏，阅读层滚动后才出现（PC 插在胶囊最前，不动其它按钮位置） */
+.pk-dock .dock-top{display:none}
+.pk-dock.is-scrolled .dock-top{display:inline-flex}
+
+/* 0.13.18：手机端动作条折叠开关。PC 端完全不显示（DOM 里保留只为手机视口服务），
+   刻意用 .dock-toggle 而不是 .dock-btn，避免混进「六项动作」的语义与计数。 */
+.pk-dock .dock-toggle{
+  display:none;align-items:center;justify-content:center;
+  width:48px;height:48px;padding:0;flex:0 0 48px;
+  background:var(--dock-bg);color:var(--ink);
+  border:1px solid var(--dock-line);border-radius:50%;
+  -webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%);
+  cursor:pointer;touch-action:manipulation;
+}
+.pk-dock .dock-toggle .pk-icon{width:20px;height:20px;pointer-events:none}
+.pk-dock .dock-toggle .i-dock-close{display:none}
+.pk-dock.is-open .dock-toggle .i-dock-more{display:none}
+.pk-dock.is-open .dock-toggle .i-dock-close{display:block}
+/* 展开时动作组与返回圆按钮轻轻浮起；置顶圆按钮不加动画，免得滚动显隐时抢时机 */
+@keyframes pkDockReveal{from{opacity:0;transform:translateY(10px) scale(.88)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){
+  .pk-dock.is-open .dock-group,
+  .pk-dock.is-open a.dock-prev{animation:none}
+}
+
+/* 手机端：贴边的竖排动作栏。置顶一个圆在上，点赞 / 评论 / 分享固定在同一块
+   竖排胶囊里，返回上一页再一颗圆落在最下面——三个部件各自独立，不连成整体。
+   默认贴右；html.dock-left 时整条换到左边（跟随重力感应或用户固定到左）。 */
+@media (max-width:1023px){
+  .pk-dock{
+    left:auto;right:calc(10px + env(safe-area-inset-right));
+    top:auto;bottom:calc(104px + env(safe-area-inset-bottom));
+    transform:none;translate:none;
+    flex-direction:column;align-items:center;gap:12px;padding:0;
+    background:transparent;border:0;border-radius:0;
+    -webkit-backdrop-filter:none;backdrop-filter:none;
+    transition:opacity .2s ease;
+  }
+  html.dock-left .pk-dock{
+    right:auto;left:calc(10px + env(safe-area-inset-left));
+  }
+  /* 手机上不要「返回列表」：手势返回 / 头部返回更顺手，动作栏只留阅读相关的 */
+  html.reading body.pk-body .pk-dock a.dock-back,
+  body.pk-body .pk-dock a.dock-back{display:none}
+  /* 返回上一页：分享下面独立的一颗圆，和其它部件之间靠 gap 留缝 */
+  body.pk-body .pk-dock a.dock-prev{display:inline-flex}
+  .pk-dock .dock-top,body.pk-body .pk-dock a.dock-prev{
+    width:48px;height:48px;border-radius:50%;
+    background:var(--dock-bg);border:1px solid var(--dock-line);color:var(--ink);
+    -webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%);
+  }
+  .pk-dock .dock-group{
+    flex-direction:column;align-items:center;gap:2px;padding:5px;
+    background:var(--dock-bg);border:1px solid var(--dock-line);border-radius:28px;
+    -webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%);
+  }
+  .pk-dock .dock-group .dock-btn,body.pk-body .pk-dock .dock-group a.dock-btn{
+    width:48px;height:56px;flex-direction:column;gap:3px;
+    background:transparent;border:0;border-radius:20px;
+  }
+  .pk-dock .dock-group .dock-btn:hover,body.pk-body .pk-dock .dock-group a.dock-btn:hover{background:rgba(128,128,128,.14)}
+  .pk-dock .dock-group .dock-btn:active,body.pk-body .pk-dock .dock-group a.dock-btn:active{background:rgba(128,128,128,.22)}
+  .pk-dock .dock-count{display:block}
+  /* 选中态反色：黑底白图标，和黑白主题一致 */
+  .pk-dock .dock-group .dock-btn.is-on,body.pk-body .pk-dock .dock-group a.dock-btn.is-on{background:var(--ink);color:var(--bg);border:0}
+  /* 首次使用提示：贴在动作组朝内的一侧，纯文字气泡，4 秒后自己淡出 */
+  .pk-dock .dock-hint{
+    position:absolute;top:58px;right:calc(100% + 12px);width:156px;
+    padding:9px 12px;font-size:12px;line-height:1.55;text-align:left;
+    color:var(--bg);background:var(--ink);border-radius:12px;
+    opacity:0;pointer-events:none;transition:opacity .28s ease;
+  }
+  html.dock-left .pk-dock .dock-hint{right:auto;left:calc(100% + 12px)}
+  .pk-dock .dock-hint.is-show{opacity:1}
+  .pk-dock .dock-hint span{display:block;margin-top:3px;font-size:11px;opacity:.72}
+
+  /* 0.13.18：默认折叠成一颗 48px 圆按钮，不再让一长条竖排动作栏压住正文右侧文字。
+     点开关展开成原来的完整动作栏；再点一次 / 点动作条外部 / 换页都会收起
+     （ESC 留给文章页「退回首页」的既有全局快捷键，动作条不接管）。
+     折叠态用 !important 压过上面的 display:inline-flex，展开态 :not() 自然失效、原规则照旧生效。 */
+  .pk-dock .dock-toggle{display:inline-flex}
+  .pk-dock:not(.is-open) .dock-top,
+  .pk-dock:not(.is-open) .dock-group,
+  .pk-dock:not(.is-open) a.dock-back,
+  .pk-dock:not(.is-open) a.dock-prev{display:none!important}
+  .pk-dock:not(.is-open){gap:0}
+  .pk-dock.is-open .dock-group,
+  .pk-dock.is-open a.dock-prev{animation:pkDockReveal .24s var(--ease) both}
+}
+.link-btn{
+  display:inline-flex;align-items:center;gap:7px;background:var(--ink);color:var(--bg);
+  border:1px solid var(--ink);border-radius:var(--radius);padding:9px 15px;font-size:13px;
+  cursor:pointer;transition:opacity .2s;
+}
+.link-btn:hover{opacity:.82}
+
+/* 分享弹层：点击复制链接后弹出，含标题与链接，可任选复制 */
+.share-dialog{
+  width:calc(100% - 40px);max-width:420px;padding:24px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--surface);color:var(--ink);
+}
+.share-dialog:not([open]){display:none}
+.share-dialog::backdrop{background:rgba(0,0,0,.38)}
+.share-title{margin:0 0 16px;font-size:17px;font-weight:600;letter-spacing:.03em;line-height:1.5}
+.share-link-row{display:flex;align-items:stretch;gap:8px;margin-bottom:16px}
+.share-link-input{
+  flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--bg);color:var(--ink);font-size:13px;line-height:1.4;
+}
+.share-copy-link{
+  flex:none;display:inline-flex;align-items:center;justify-content:center;
+  padding:0 14px;border:0;border-radius:var(--radius);background:var(--ink);color:var(--bg);
+  font-size:13px;cursor:pointer;transition:opacity .2s;
+}
+.share-copy-link:hover{opacity:.82}
+.share-actions{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.share-cancel{flex:none;background:transparent;border:0;color:var(--ink-2);font-size:13px;cursor:pointer;padding:4px 2px}
+.share-cancel:hover{color:var(--ink)}
+
+/* 全站公告弹窗：白卡 + 大留白，标题带铃铛，底部右侧「文字按钮 + 黑胶囊确认」。
+   遮罩轻虚化让背景退后（与悬浮条同一套毛玻璃做法，不用阴影） */
+.pk-notice{
+  width:calc(100% - 40px);max-width:480px;margin:auto;padding:22px 22px 20px;
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface);color:var(--ink);
+  opacity:0;transform:translateY(10px) scale(.98);
+  transition:opacity .24s ease,transform .24s ease;
+}
+.pk-notice:not([open]){display:none}
+.pk-notice[open]{opacity:1;transform:none}
+.pk-notice[open].is-closing{opacity:0;transform:translateY(10px) scale(.98)}
+.pk-notice::backdrop{
+  background:rgba(0,0,0,0);backdrop-filter:blur(0);
+  transition:background-color .24s ease,backdrop-filter .24s ease;
+}
+.pk-notice[open]::backdrop{background:rgba(0,0,0,.38);backdrop-filter:blur(3px)}
+.pk-notice[open].is-closing::backdrop{background:rgba(0,0,0,0);backdrop-filter:blur(0)}
+@starting-style{
+  .pk-notice[open]{opacity:0;transform:translateY(10px) scale(.98)}
+  .pk-notice[open]::backdrop{background:rgba(0,0,0,0);backdrop-filter:blur(0)}
+}
+.pk-notice-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.pk-notice-title{
+  display:flex;align-items:center;gap:8px;margin:0;
+  font-size:17px;font-weight:600;line-height:1.5;letter-spacing:.01em;color:var(--ink);
+}
+.pk-notice-title .pk-icon{flex:none}
+.pk-notice-close{
+  flex:none;display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;margin:-4px -6px 0 0;padding:0;
+  border:0;border-radius:50%;background:transparent;color:var(--ink-3);
+  cursor:pointer;transition:color .2s ease,background-color .2s ease;
+}
+.pk-notice-close:hover{color:var(--ink);background:var(--soft)}
+/* 弹窗打开时浏览器自动聚焦关闭按钮，全局 :focus-visible 会在黑白卡上画一圈 2px 黑环。
+   这里压掉描边，改用中性灰圆底表达焦点（明暗主题都看得见）。 */
+body.pk-body .pk-notice .pk-notice-close:focus{outline:none}
+body.pk-body .pk-notice .pk-notice-close:focus-visible{outline:none;color:var(--ink);background:rgba(128,128,128,.16)}
+.pk-notice-body{
+  margin:14px 0 0;max-height:52vh;overflow:auto;
+  font-size:14px;line-height:1.78;color:var(--ink-2);
+}
+.pk-notice-body p{margin:0}
+.pk-notice-body p + p{margin-top:6px}
+.pk-notice-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:22px}
+.pk-notice-later{
+  padding:6px 8px;border:0;border-radius:8px;background:transparent;
+  color:var(--ink-2);font:inherit;font-size:13px;cursor:pointer;
+  transition:color .2s ease;
+}
+.pk-notice-later:hover,.pk-notice-later:focus-visible{color:var(--ink)}
+.pk-notice-ok{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:36px;padding:0 20px;border:0;border-radius:999px;
+  background:var(--ink);color:var(--bg);font:inherit;font-size:13px;font-weight:500;
+  letter-spacing:.02em;cursor:pointer;transition:opacity .2s ease;
+}
+.pk-notice-ok:hover{opacity:.82}
+@media (min-width:768px){
+  .pk-notice{padding:26px 28px 24px}
+  .pk-notice-title{font-size:18px}
+  .pk-notice-body{font-size:14.5px}
+  .pk-notice-ok{height:38px;padding:0 22px}
+}
+@media (prefers-reduced-motion: reduce){
+  .pk-notice,.pk-notice[open],.pk-notice[open].is-closing{transition:none;transform:none}
+}
+
+/* 复制成功提示：移到顶部、贴着头部下沿；纯黑白、12px 圆角、无阴影，只做淡入淡出 */
+.pk-toast{
+  position:fixed;left:50%;top:calc(var(--head-h) + 14px + env(safe-area-inset-top));
+  transform:translateX(-50%);z-index:200;
+  display:inline-flex;align-items:center;gap:7px;
+  max-width:calc(100vw - 40px);padding:9px 14px;border-radius:var(--radius);
+  background:var(--ink);color:var(--bg);font-size:13px;line-height:1.4;white-space:nowrap;
+  opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s ease;
+}
+.pk-toast.show{opacity:1;visibility:visible}
+.pk-toast-icon{display:inline-flex;flex:none}
+.pk-toast-icon .pk-icon{width:15px;height:15px}
+
+/* 图集灯箱：原生 dialog 进 top layer，不受阅读层 / 转场 z-index 影响 */
+.pk-lightbox{
+  position:fixed;inset:0;width:100vw;height:100vh;max-width:none;max-height:none;
+  margin:0;padding:0;border:0;border-radius:0;overflow:hidden;
+  /* 兜底分支（库未加载）也不能把正文盖死：半透明 + 轻磨砂，与 PhotoSwipe 一致 */
+  background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);color:var(--ink);
+}
+:root[data-theme="dark"] .pk-lightbox{background:rgba(0,0,0,.55)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pk-lightbox{background:rgba(0,0,0,.55)}}
+.pk-lightbox::backdrop{background:transparent}
+.pk-lightbox[open]{display:flex;flex-direction:column}
+.pk-lightbox-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  /* PC 顶栏移除后 --head-h 为 0，灯箱工具条保底 56px，否则按钮贴顶被裁 */
+  height:max(var(--head-h, 61px), 56px);flex:none;padding:0 14px;
+}
+.pk-lightbox-count{font-size:12px;letter-spacing:.08em;color:var(--ink-2)}
+.pk-lightbox-btn{
+  display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;
+  background:transparent;color:var(--ink-2);border:0;border-radius:var(--radius);
+  cursor:pointer;transition:color .2s;
+}
+.pk-lightbox-btn:hover,.pk-lightbox-btn:focus-visible{color:var(--ink)}
+.pk-lightbox-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 10px}
+.pk-lightbox-stage img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:var(--radius)}
+.pk-lightbox-nav{flex:none}
+.pk-lightbox:not(.is-many) .pk-lightbox-nav{display:none}
+.pk-lightbox-caption{
+  flex:none;margin:0;padding:12px 20px calc(18px + env(safe-area-inset-bottom));
+  text-align:center;font-size:12px;line-height:1.6;color:var(--ink-3);
+}
+
+/* ============================================================
+   换页加载反馈：Swup 先 pushState 再取 HTML，回源慢时中间有空窗，
+   不能让页面「地址变了却一动不动」。纯色细线，无渐变 / 阴影。
+   ============================================================ */
+html.pk-nav-loading::before{
+  content:"";position:fixed;top:0;left:0;width:34%;height:2px;
+  background:var(--ink);z-index:2147483000;pointer-events:none;
+  animation:pk-nav-bar 1.05s var(--ease) infinite;
+}
+@keyframes pk-nav-bar{
+  from{transform:translate3d(-100%,0,0)}
+  to{transform:translate3d(320%,0,0)}
+}
+@media (prefers-reduced-motion:reduce){
+  html.pk-nav-loading::before{width:100%;animation:none}
+}
+
+/* ============================================================
+   页面切换扫光（非文章）：一层毛玻璃斜带从左上角扫到右下角。
+   全程只有这一个 backdrop-filter，不叠白 / 黑颜色，亮度恒定不变；
+   斜带两端羽化渐入渐出，扫过时整屏都是毛玻璃，扫完立即恢复清晰，
+   0.5s 一次完成。文章阅读层（/N/、/N/talk、?p=N）由 JS 排除。
+   ============================================================ */
+.pk-sweep{position:fixed;inset:0;z-index:70;pointer-events:none;opacity:0;overflow:hidden}
+.pk-sweep.is-on{opacity:1}
+/* 3 倍于视口的斜带：mask 沿 135deg 渐变，等色带垂直于主对角线；
+   x / y 同量位移即沿主对角线（左上 -> 右下）推进，全程只有一个模糊层。 */
+.pk-sweep-lens{
+  position:absolute;left:-100%;top:-100%;width:300%;height:300%;
+  -webkit-backdrop-filter:blur(16px);
+  backdrop-filter:blur(16px);
+  -webkit-mask-image:linear-gradient(135deg,transparent 28%,#000 40%,#000 60%,transparent 72%);
+  mask-image:linear-gradient(135deg,transparent 28%,#000 40%,#000 60%,transparent 72%);
+  transform:translate(-39%,-39%);
+}
+.pk-sweep.is-on .pk-sweep-lens{animation:pk-sweep-run var(--pk-sweep-dur,.5s) ease-in-out both}
+@keyframes pk-sweep-run{
+  0%{transform:translate(-39%,-39%)}
+  100%{transform:translate(39%,39%)}
+}
+@media (prefers-reduced-motion:reduce){.pk-sweep{display:none}}
+
+/* ============================================================
+   共享元素转场
+   ============================================================ */
+::view-transition-group(morph){animation-duration:520ms;animation-timing-function:var(--ease)}
+::view-transition-old(morph){animation:520ms var(--ease) both vt-out}
+::view-transition-new(morph){animation:520ms var(--ease) both vt-in}
+@keyframes vt-out{to{opacity:0}}
+@keyframes vt-in{from{opacity:0}}
+::view-transition-old(root),::view-transition-new(root){animation-duration:300ms}
+
+/* 卡片转场：关掉整页交叉淡化与 plus-lighter 叠加（白底头部会因此发白闪一下），
+   只让 morph 组做形变；头部独立成组并置顶，避免缩回时被详情层快照盖住再露出 */
+html.pk-morphing .site-head{view-transition-name:pk-head}
+::view-transition-group(pk-head){z-index:100}
+html.pk-morphing::view-transition-group(pk-head){animation:none}
+html.pk-morphing::view-transition-old(root),
+html.pk-morphing::view-transition-new(root),
+html.pk-morphing::view-transition-old(pk-head),
+html.pk-morphing::view-transition-new(pk-head){
+  animation:none;mix-blend-mode:normal;
+}
+html.pk-morphing::view-transition-old(root),
+html.pk-morphing::view-transition-old(pk-head){z-index:1}
+html.pk-morphing::view-transition-new(root),
+html.pk-morphing::view-transition-new(pk-head){z-index:2}
+
+/* 展开方向丢弃旧头部快照：即便它已在捕获前切成阅读态，也不参与合成，
+   避免任何首页态残留（工具图标 / 白底 / 展开中的搜索面板）从透明头部透出 */
+html.pk-morph-open::view-transition-old(pk-head){opacity:0}
+/* 悬浮操作条不参与卡片形变：转场期间隐藏，结束后淡入 */
+html.pk-morphing .pk-dock{opacity:0}
+
+/* 深浅色切换：关掉默认交叉淡化，由 JS 在 new 快照上做圆形扩散揭示 */
+html.pk-theme-swap::view-transition-old(root),
+html.pk-theme-swap::view-transition-new(root){animation:none;mix-blend-mode:normal}
+html.pk-theme-swap::view-transition-old(root){z-index:1}
+html.pk-theme-swap::view-transition-new(root){z-index:2}
+
+/* 不支持 View Transitions 的浏览器：颜色渐变兜底，避免硬闪 */
+html.pk-no-vt body.pk-body,
+html.pk-no-vt .site-head,
+html.pk-no-vt .detail,
+html.pk-no-vt .share-dialog{transition:background-color .5s ease,color .5s ease,border-color .5s ease}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  .hero-track{animation:none !important}
+}
+
+/* ============================================================
+   宽屏最小兜底（完整宽屏适配后续再做）
+   ============================================================ */
+@media (min-width:768px){
+  .wrap{max-width:var(--maxw)}
+  .head-inner{height:72px}
+  .mark,.logo-img{height:32px}
+  .logo-img{width:32px}
+  /* 顶栏移除后这一行（分类下拉 + 计数）在 PC 没有内容，留着会白占 50px，
+     幻灯片就能紧贴视口顶部 */
+  .feed-head{display:none}
+  .card-visual.quote{min-height:150px}
+  .card-title{font-size:19px}
+  .detail-hero{height:420px}
+  .detail-hero.quote{min-height:420px}
+  .hero-track{animation-duration:48s}
+  .detail-body{max-width:760px;margin:0 auto;padding:34px 38px 0}
+  .detail-body h1{font-size:30px}
+  .prose{font-size:16px}
+  body.admin-bar .site-head{top:32px}
+}
+
+/* ============================================================
+   说说：卡片流（/say/ 归档与单条页）
+   黑白骨架：无渐变无阴影，12px 圆角；每条说说一张卡片，头部带作者头像 / 昵称 / 时间
+   ============================================================ */
+.say-page{max-width:1180px}
+.say-head{padding:34px 0 4px}
+.say-title{margin:0;font-size:22px;font-weight:600;letter-spacing:.06em;color:var(--ink)}
+.say-desc{margin:8px 0 0;font-size:13px;color:var(--ink-2)}
+.say-list{list-style:none;margin:22px auto 64px;padding:0;max-width:1180px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:stretch}
+.say-item{min-width:0}
+.say-card{display:flex;flex-direction:column;height:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px 14px;transition:border-color .2s}
+.say-card:hover,.say-card:focus-within{border-color:var(--ink-3)}
+.say-card-head{display:flex;align-items:center;gap:10px;min-width:0}
+.say-avatar{display:inline-flex;flex:none;width:40px;height:40px}
+.say-avatar .user-avatar{width:40px;height:40px;font-size:15px}
+.say-author{display:flex;flex-direction:column;gap:2px;min-width:0}
+.say-name{font-size:13px;font-weight:600;line-height:1.4;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.say-time{font-size:11.5px;line-height:1.4;color:var(--ink-3)}
+.say-content{margin-top:14px;flex:1;font-size:14px;line-height:1.9;color:var(--ink);word-break:break-word;overflow-wrap:break-word}
+.say-content p{margin:0 0 6px}
+.say-content p:last-child{margin-bottom:0}
+.say-content a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.say-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.say-loc{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-3)}
+.say-empty{margin:40px 0 80px;text-align:center;font-size:14px;color:var(--ink-2)}
+/* 0.13.27 单条说说：与归档同宽容器、头部一致；卡片左对齐并放大，不再 640px 居中留白 */
+/* 只设 padding-bottom：左右 20px 边距交还给 .wrap，别用 padding 简写把 .wrap 盖掉 */
+.say-single{padding-bottom:64px}
+.say-single .say-head{padding:34px 0 4px}
+.say-single-inner{max-width:880px;margin:0}
+.say-back{display:inline-flex;align-items:center;gap:6px;margin:22px 0 0;font-size:13px;color:var(--ink-2);text-decoration:none;transition:color .2s}
+.say-back:hover,.say-back:focus-visible{color:var(--ink)}
+.say-list .say-card{cursor:pointer}
+.say-card--open{padding:26px 30px 24px}
+.say-card--open .say-avatar,.say-card--open .say-avatar .user-avatar{width:48px;height:48px;font-size:17px}
+.say-card--open .say-name{font-size:15px}
+.say-card--open .say-time{font-size:12px}
+.say-card--open .say-content{margin-top:20px;font-size:16px;line-height:2}
+.say-card--open .say-foot{margin-top:18px;padding-top:14px}
+@media (max-width:600px){
+  .say-card--open{padding:20px 18px}
+  .say-card--open .say-content{font-size:15px}
+}
+@media (min-width:720px){.say-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1200px){.say-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* ============================================================
+   说说：卡片点赞按钮（常驻）/ 个人中心点赞卡片
+   黑白骨架，1px 描边 + 12px 圆角，无阴影无渐变，颜色全走变量（暗黑自适应）
+   ============================================================ */
+/* 卡片底部：点赞按钮在左，点赞人头像重叠排队（最多 3 枚 + 省略号），位置靠右 */
+.say-like-btn{display:inline-flex;align-items:center;gap:5px;flex:none;min-height:28px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink-2);font-size:12px;cursor:pointer;transition:border-color .2s,color .2s}
+.say-like-btn:hover,.say-like-btn:focus-visible{border-color:var(--ink);color:var(--ink)}
+.say-like-btn.is-on{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.say-like-btn .pk-icon{width:14px;height:14px}
+.say-like-count{font-variant-numeric:tabular-nums}
+.say-likers{display:inline-flex;align-items:center;min-width:0}
+.pk-say-liker{display:inline-flex;flex:none;width:24px;height:24px;margin-right:-8px;border:2px solid var(--surface);border-radius:50%;overflow:hidden;background:var(--line)}
+.pk-say-liker .user-avatar{width:20px;height:20px;font-size:9px}
+.pk-say-likers-more{margin-left:12px;font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--ink-2)}
+.pk-say-likers-empty{font-size:11px;color:var(--ink-3)}
+.say-foot .say-loc{margin-left:auto}
+
+/* 个人中心「我的点赞」换成首页同款 .card 网格 */
+.pk-user-cards{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:22px}
+@media (min-width:720px){.pk-user-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1200px){.pk-user-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* 账号设置：登录名只读 + 修改密码分组 */
+.user-field-ro{display:block}
+.user-login-ro{display:block;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--soft);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;color:var(--ink-2);word-break:break-all}
+.user-login-hint{margin:-6px 0 16px}
+.user-pwd-set{margin:0 0 14px;padding:12px 14px 0;border:1px solid var(--line);border-radius:10px}
+.user-pwd-set legend{padding:0 6px;font-size:12px;color:var(--ink-3)}
+
+/* ============================================================
+   PC 双栏：左侧固定导航栏 + 右侧自适应卡片网格（仅 ≥1024px 生效）
+   移动端保持原单列不变；此区块不得影响小屏布局
+   ============================================================ */
+.pc-aside{display:none}
+.pc-aside-inner{
+  display:flex;flex-direction:column;min-height:100vh;
+  padding:30px 24px 22px;gap:0;
+}
+.pc-nav{margin-top:0;display:flex;flex-direction:column;gap:2px}
+.pc-nav-link{position:relative;display:inline-flex;align-items:center;gap:9px;padding:8px 0;font-size:14px;color:var(--ink-2);border-radius:8px;transition:color .2s,padding .28s var(--ease),background-color .2s}
+.pc-nav-link:hover,.pc-nav-link:focus-visible{color:var(--ink);background:var(--soft)}
+button.pc-nav-link{background:none;border:0;font:inherit;cursor:pointer;text-align:left}
+button.pc-nav-link[aria-expanded="true"]{color:var(--ink)}
+/* 当前所在页：只改字色，不加底色不加粗，侧栏保持安静 */
+.pc-nav-link.is-active{color:var(--ink)}
+/* 「更多」分组：只留一枚小标题，下面两个平铺按钮（0.13.11 去掉折叠卡片） */
+.pc-nav-label{
+  margin:24px 0 8px;font-size:11px;font-weight:600;letter-spacing:.14em;
+  color:var(--ink-3);transition:opacity .14s var(--ease),visibility 0s linear 0s;
+}
+/* 分类 / 标签弹出面板：贴在侧栏右缘的浮层（JS 计算位置），
+   fixed 定位不受侧栏 overflow:hidden 裁剪；与搜索下拉同风格 */
+.pc-pop{
+  position:fixed;top:0;left:calc(var(--sidebar-w) + 10px);
+  width:240px;max-width:calc(100vw - 40px);
+  max-height:60vh;overflow:auto;-webkit-overflow-scrolling:touch;
+  padding:14px 16px;z-index:80;
+  background:var(--surface);color:var(--ink);
+  border:1px solid var(--line);border-radius:var(--radius);
+  opacity:0;transform:translateX(-6px);
+  transition:opacity .18s var(--ease),transform .18s var(--ease);
+}
+.pc-pop.is-shown{opacity:1;transform:translateX(0)}
+.pc-pop[hidden]{display:none}
+.pc-pop-title{margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:.12em;color:var(--ink-3)}
+.pc-tags{display:flex;flex-wrap:wrap;gap:8px}
+.pc-tag{padding:5px 11px;border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--ink-2);transition:border-color .2s,color .2s}
+.pc-tag:hover,.pc-tag:focus-visible{color:var(--ink);border-color:var(--ink)}
+/* 侧栏底部的登录 / 我的：一整块可点区域，收起态只留圆形头像 */
+.pc-side-user{
+  display:flex;align-items:center;gap:10px;width:100%;flex:none;
+  padding:8px 10px;margin:0 0 2px;
+  border:1px solid var(--line);border-radius:var(--radius);
+  color:var(--ink);transition:border-color .2s,padding .28s var(--ease),background-color .2s;
+}
+.pc-side-user:hover,.pc-side-user:focus-visible{border-color:var(--ink);background:var(--soft)}
+.pc-side-user.is-active{border-color:var(--ink)}
+.pc-side-avatar{
+  position:relative;overflow:hidden;
+  width:30px;height:30px;flex:none;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);border-radius:50%;
+  background:var(--bg);color:var(--ink-2);
+  font-size:13px;font-weight:600;line-height:1;
+  transition:background-color .2s,color .2s,border-color .2s;
+}
+.pc-side-user.is-on .pc-side-avatar{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+/* 0.13.13 侧栏头像圈显示账号真实头像：图片铺满圆圈，不再反黑底、不再显示名字首字 */
+.pc-side-avatar-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;border-radius:50%;display:none;
+}
+.pc-side-user.has-avatar .pc-side-avatar-img{display:block}
+.pc-side-user.has-avatar.is-on .pc-side-avatar{background:var(--bg);border-color:var(--line);color:var(--ink-2)}
+.pc-side-avatar-txt{display:none}
+.pc-side-user.is-on .pc-side-avatar-ico{display:none}
+.pc-side-user.is-on .pc-side-avatar-txt{display:block}
+.pc-side-user.has-avatar.is-on .pc-side-avatar-txt{display:none}
+.pc-side-user-main{min-width:0;display:flex;flex-direction:column;line-height:1.35}
+.pc-side-user-name{font-size:13.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-side-user-sub{font-size:11px;color:var(--ink-3)}
+/* 版权 + 折叠 / 深浅色同一行（0.13.13）：展开并排，折叠时版权隐藏、两枚图标竖排 */
+.pc-side-foot-row{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:22px}
+.pc-foot{min-width:0;flex:1;font-size:11px;line-height:1.7;color:var(--ink-3);transition:opacity .14s var(--ease),visibility 0s linear 0s}
+/* 折叠 + 深浅色图标组：展开横排（折叠在左），折叠竖排（折叠在下） */
+.pc-side-icons{display:inline-flex;align-items:center;gap:2px;flex:none;position:relative}
+.pc-side-icons .aside-toggle{margin:0;align-self:center}
+/* 版权行 + 登录块作为整体贴底（折叠把手已移到卡片右缘，不参与这里的 auto 排布） */
+.pc-side-bottom{margin-top:auto;display:flex;flex-direction:column;align-items:flex-start;flex:none}
+.pc-icp{display:block;margin-top:3px}
+
+/* ---- 文章右侧栏：作者信息卡片 + 目录（仅 ≥1280px 显示）---- */
+.read-rail{display:none}
+.pc-author+.pk-toc{margin-top:26px}
+.pk-toc .pc-pop-title{margin-bottom:6px}
+.pk-toc-list{list-style:none;margin:0;padding:0}
+.pk-toc-list li a{
+  display:block;padding:6px 0 6px 11px;
+  font-size:13px;line-height:1.5;color:var(--ink-2);
+  border-left:2px solid var(--line);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  transition:color .2s,border-color .2s;
+}
+.pk-toc-list li.is-h3 a{padding-left:23px;font-size:12px}
+.pk-toc-list li a:hover,.pk-toc-list li a:focus-visible{color:var(--ink)}
+.pk-toc-list li a.is-active{color:var(--ink);border-left-color:var(--ink)}
+.pc-author{padding:20px 16px 18px;text-align:center;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg)}
+.pc-avatar{
+  display:flex;align-items:center;justify-content:center;
+  width:56px;height:56px;margin:0 auto;border-radius:50%;
+  border:1px solid var(--line);background:var(--surface);overflow:hidden;
+}
+.pc-avatar img{width:100%;height:100%;display:block;object-fit:cover}
+.pc-avatar.is-text{font-size:20px;font-weight:600;color:var(--ink);text-transform:uppercase}
+.pc-author-name{display:block;margin-top:11px;font-size:14px;font-weight:600;color:var(--ink);letter-spacing:.01em}
+.pc-author-stat{display:block;margin-top:3px;font-size:12px;color:var(--ink-2)}
+.pc-author-bio{
+  margin:10px 0 0;font-size:12px;line-height:1.75;color:var(--ink-2);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  transition:opacity .2s var(--ease);
+}
+/* 一言接口加载中/加载失败时淡入淡出，避免文字突然跳动 */
+.pc-author-bio.is-loading{opacity:.45}
+/* 作者卡社交图标行（0.13.28）：统一描边图标、留空的平台不输出；图标走 currentColor，暗黑自动适配 */
+.pc-author-socials{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;
+  margin-top:14px;
+}
+.pc-author-social{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;border:1px solid var(--line);border-radius:9px;
+  color:var(--ink-2);
+  transition:border-color .2s,color .2s;
+}
+.pc-author-social:hover,.pc-author-social:focus-visible{border-color:var(--ink);color:var(--ink)}
+.pc-author-social .pk-icon{display:block}
+.pc-author-contact{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  margin-top:14px;height:34px;
+  border:1px solid var(--line);border-radius:var(--radius);
+  font-size:13px;color:var(--ink);transition:border-color .2s,color .2s;
+}
+.pc-author-contact:hover,.pc-author-contact:focus-visible{border-color:var(--ink)}
+/* PC 专属控件：小屏隐藏（移动端走 search-dialog 弹窗、无侧栏可收起）。 */
+.aside-toggle,.pc-search{display:none}
+/* 抽屉关闭按钮只属于手机端侧栏，PC 侧栏常驻用不到 */
+.pk-drawer-close{display:none}
+/* 侧栏图标统一提示气泡（图二黑底标签）：挂在 body、fixed 定位不受侧栏 overflow 裁切。
+   JS 按图标中心定位（top 为中心），这里 translateY(-50%) 归中，淡入只用 transform/opacity。 */
+.pk-side-tip{
+  position:fixed;z-index:100;top:0;left:0;pointer-events:none;
+  padding:7px 11px;background:var(--ink);color:var(--bg);
+  border-radius:6px;font-size:13px;line-height:1;font-weight:500;letter-spacing:.02em;
+  white-space:nowrap;opacity:0;
+  transform:translate(-4px,-50%);
+  transition:opacity .16s var(--ease),transform .16s var(--ease);
+}
+.pk-side-tip.is-on{opacity:1;transform:translate(0,-50%)}
+.pk-side-tip::before{
+  content:'';position:absolute;left:-4px;top:50%;
+  width:9px;height:9px;background:var(--ink);border-radius:1px;
+  transform:translateY(-50%) rotate(45deg);
+}
+.pk-side-tip.is-left::before{left:auto;right:-4px}
+
+/* ============================================================
+   手机端侧栏抽屉（0.13.9）：顶栏最左侧按钮向左滑出，
+   内容照搬 PC 侧栏（品牌 / 导航 / 更多 / 版权），只去掉「个人中心」入口
+   关闭：遮罩、右上角 ×、ESC、点任意链接
+   ============================================================ */
+.aside-mask{display:none}
+@media (max-width:1023.98px){
+  /* 抽屉宽度抽成变量：推拉位移与侧栏宽度永远一致（0.13.16） */
+  :root{--pk-drawer-w:min(82vw,300px)}
+  .pc-aside{
+    display:block;position:fixed;top:0;left:0;bottom:0;
+    width:var(--pk-drawer-w);z-index:70;
+    background:var(--bg);border-right:1px solid var(--line);
+    overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+    transform:translateX(-101%);visibility:hidden;
+    transition:transform .3s var(--ease),visibility .3s var(--ease);
+  }
+  body.pk-aside-open .pc-aside{transform:none;visibility:visible}
+  body.admin-bar .pc-aside{top:32px}
+  .pc-aside-inner{min-height:100%;padding:16px 18px 26px}
+  .pc-side-brand{
+    display:flex;align-items:center;gap:10px;min-width:0;
+    margin:0 0 18px;padding-right:40px;color:var(--ink);
+  }
+  .pc-side-logo{width:28px;height:28px;object-fit:contain;display:block;flex:none}
+  .pc-side-brand-txt{font-size:15px;font-weight:600;letter-spacing:.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pc-side-top{position:relative;flex:none}
+  .pk-drawer-close{
+    display:inline-flex;align-items:center;justify-content:center;
+    position:absolute;right:0;top:0;width:34px;height:34px;padding:0;
+    border:0;border-radius:50%;background:none;color:var(--ink-2);cursor:pointer;
+  }
+  .pk-drawer-close:hover,.pk-drawer-close:focus-visible{color:var(--ink)}
+  /* 抽屉里没有折叠概念，也不放个人中心入口 */
+  .pc-side-user{display:none}
+  /* 分类浮层在抽屉里就地展开，不再挂到侧栏右侧（JS 会写 top/left，这里用 !important 压掉） */
+  .pc-pop{
+    position:static;width:auto;max-width:none;max-height:none;overflow:visible;
+    top:auto!important;left:auto!important;
+    margin:4px 0 0;padding:0;border:0;background:none;
+    opacity:1;transform:none;transition:none;
+  }
+  /* 0.13.16：默认折叠（侧栏收在屏外、正文全宽），点顶栏按钮才展开。
+     展开时不再让 300px 侧栏 + 深色遮罩压在文字上：把顶栏与整页内容一起推到右侧，
+     正文是「被推走」而不是「被盖住」，右侧露出的文字依旧清晰可读。
+     用 transform 而非 margin-left，内容宽度不变、不会被挤成竖条；
+     .site-head / #swup-wrapper 都在 .pc-aside 之外，推它们不影响抽屉本身。 */
+  .site-head,#swup-wrapper{transition:transform .3s var(--ease)}
+  body.pk-aside-open .site-head,
+  body.pk-aside-open #swup-wrapper{transform:translateX(var(--pk-drawer-w))}
+  .aside-mask{
+    display:block;position:fixed;inset:0;z-index:69;
+    /* 遮罩只负责「点空白处关闭」，不再把正文压暗到看不清字（0.13.16） */
+    background:rgba(0,0,0,.06);opacity:0;visibility:hidden;
+    transition:opacity .3s ease,visibility .3s ease;
+  }
+  body.pk-aside-open .aside-mask{opacity:1;visibility:visible}
+  body.pk-aside-open{overflow:hidden}
+}
+
+@media (min-width:1024px){
+  /* PC 顶栏整条移除（0.11.31）：侧栏、首页幻灯片直接从视口顶部开始。
+     --head-h 由 app.js 按 .site-head 实测高度回写（隐藏即 0），这里给 0 打底，
+     所有 calc(var(--head-h) + …) 自动归零。 */
+  :root{--sidebar-w:268px;--head-h:0px}
+  .site-head{display:none}
+  /* 内容区顶部留 12px，与侧栏卡片 margin 对齐 */
+  #main{padding-top:12px}
+  /* PC 布局：顶栏整条移除，侧栏从视口顶部开始，展开 268 / 收起 72 */
+  /* 外壳保持 --sidebar-w 宽（内容区让位 / 阅读层起点都按它算），
+     卡片长在里面：四周各缩 12px，浅灰底 + 16px 圆角，滚动条也只出现在卡片内 */
+  .pc-aside{
+    display:block;position:fixed;top:var(--head-h);left:0;
+    width:var(--sidebar-w);height:calc(100vh - var(--head-h));overflow:hidden;
+    background:transparent;z-index:57;
+    transition:width .28s var(--ease);
+  }
+  /* 后台登录时侧栏整体下移，避开固定顶部的 admin bar */
+  body.admin-bar .pc-aside{top:32px;height:calc(100vh - 32px)}
+  /* 收起：侧栏不折叠到 0，而是收成 72px 纯图标栏（--sidebar-w 驱动内容区让位） */
+  html.pk-aside-collapsed{--sidebar-w:72px}
+  /* 内部容器宽度跟随：展开 268 / 收起 72，动画期间文字与图标一起过渡 */
+  .pc-aside-inner{
+    width:calc(100% - 24px);height:calc(100% - 24px);
+    margin:12px;padding:24px 18px 16px;
+    background:var(--soft);border-radius:16px;
+    transition:padding .28s var(--ease),background-color .5s ease;
+  }
+  html.pk-aside-collapsed .pc-aside-inner{padding-left:0;padding-right:0}
+  /* 收起态只留图标：文字淡出（不能用 display:none，否则图标会瞬间重排弹位），
+     图标靠 padding-left 从 24 平滑挪到 27（正好落在 72px 栏正中），全程只有 3px 位移 */
+  .pc-nav-link span{transition:opacity .14s var(--ease),visibility 0s linear 0s}
+  html.pk-aside-collapsed .pc-side-foot-row{
+    flex-direction:column;justify-content:center;align-items:center;
+    width:100%;gap:5px;margin-top:12px;
+  }
+  html.pk-aside-collapsed .pc-foot{display:none}
+  /* 收起态两枚图标竖排：DOM 顺序 [折叠,深浅色]，column-reverse 让深浅色在上、折叠在下；
+     34px 按钮横排会各溢出 11px 顶满 72px 窄栏，竖排后居中于 48px 内容盒
+     （x=19..53），与导航图标同轴、不被 .pc-aside 的 overflow:hidden 裁切。 */
+  html.pk-aside-collapsed .pc-side-icons{
+    flex-direction:column-reverse;align-items:center;justify-content:center;
+    gap:5px;width:100%;margin:0;
+  }
+  /* 文字必须脱离布局：只 visibility:hidden 时它仍占宽度，窄栏里 4 字标签会换行，
+     把导航项从 40px 撑到 120px，图标间距忽大忽小 */
+  html.pk-aside-collapsed .pc-nav-link span{
+    position:absolute;top:0;left:0;white-space:nowrap;pointer-events:none;
+    opacity:0;visibility:hidden;transition:opacity .14s var(--ease),visibility 0s linear .14s;
+  }
+  /* 「更多」收起态：小标题让位，只留两枚图标，与其它项齐平 */
+  html.pk-aside-collapsed .pc-nav-label{opacity:0;visibility:hidden;height:0;margin:0;flex:0 0 0;overflow:hidden}
+  /* 收起态：每项固定 40px 高，图标按卡片（48px）中线居中，间距恒定 */
+  html.pk-aside-collapsed .pc-nav-link{
+    width:100%;height:40px;padding:0 0 0 calc(50% - 9px);
+    transition:color .2s,padding .28s var(--ease);
+  }
+  html.pk-aside-collapsed .pc-side-bottom{align-items:center}
+  /* 收起态：登录块收成一枚 30px 头像，居中与图标列对齐 */
+  html.pk-aside-collapsed .pc-side-user{padding:0;justify-content:center;border-color:transparent;border-radius:50%;background:none}
+  html.pk-aside-collapsed .pc-side-user:hover,
+  html.pk-aside-collapsed .pc-side-user:focus-visible{background:var(--bg)}
+  html.pk-aside-collapsed .pc-side-user-main{display:none}
+  html.pk-aside-collapsed .aside-toggle{margin-top:0}
+  html.pk-aside-collapsed .aside-theme{margin:0}
+  /* 内容区跟随侧栏宽度平滑让位 / 展开（顶栏已全宽，不再有 margin 过渡） */
+  .wrap{transition:margin-left .28s var(--ease),max-width .28s var(--ease)}
+  /* 侧栏底部只留深浅色切换（34px 纯图标按钮），不在顶栏 */
+  .aside-toggle{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:34px;height:34px;padding:0;margin-top:12px;flex:none;align-self:flex-start;
+    background:transparent;color:var(--ink-2);border:0;border-radius:var(--radius);
+    cursor:pointer;transition:color .2s,opacity .2s;
+  }
+  .aside-toggle:hover,.aside-toggle:focus-visible{color:var(--ink);background:var(--soft)}
+  /* 折叠把手：与深浅色同组放进 .pc-side-icons，展开在最左、折叠时落在深浅色按钮下方。
+     复用 .aside-toggle 通用外观（34×34 纯图标、hover 变深），不再 fixed / 隐藏。 */
+  #aside-toggle{position:relative;width:34px;height:34px;margin:0}
+  .i-aside-open{display:none}
+  html.pk-aside-collapsed .i-aside-close{display:none}
+  html.pk-aside-collapsed .i-aside-open{display:block}
+  html.pk-aside-collapsed .aside-toggle{align-self:center}
+  /* PC 用内联搜索框：弹窗触发按钮隐藏；PC 上任何入口都不再走 search-dialog */
+  #search-toggle{display:none}
+  /* PC 文章内页不再放搜索图标按钮：顶栏已经有常驻的内联搜索框 */
+  #read-search-toggle{display:none}
+  /* PC 的深浅色切换搬到侧栏底部（折叠开关上方），顶栏两处主题按钮在 PC 隐藏 */
+  #theme-toggle,#theme-toggle-single{display:none}
+  .aside-theme{color:var(--ink-2)}
+  /* 侧栏品牌：PC 顶栏整条移除后，Logo 图标 + 站点名称落在侧栏最上（搜索框之上） */
+  .pc-side-brand{display:flex;align-items:center;gap:10px;margin:0 0 16px;padding:0 2px;color:var(--ink)}
+  .pc-side-logo{width:28px;height:28px;object-fit:contain;display:block;flex:none}
+  .pc-side-brand-txt{font-size:15px;font-weight:600;letter-spacing:.06em;white-space:nowrap}
+  html.pk-aside-collapsed .pc-side-brand{justify-content:center;margin:0 0 12px;padding:0}
+  html.pk-aside-collapsed .pc-side-brand-txt{display:none}
+  .pc-side-top{position:relative;flex:none;margin:0 0 16px}
+  .pc-search{
+    position:relative;display:flex;align-items:center;gap:8px;
+    width:100%;height:38px;padding:0 13px;flex:none;
+    background:var(--bg);color:var(--ink);
+    border:1px solid var(--line);border-radius:999px;
+    transition:border-color .2s ease,background-color .5s ease,color .5s ease,width .28s var(--ease),padding .28s var(--ease);
+  }
+  .pc-search:focus-within{border-color:var(--ink)}
+  .pc-search-ico{flex:none;display:flex;color:var(--ink-2)}
+  .pc-search input{
+    flex:1;min-width:0;border:0;outline:none;background:transparent;color:var(--ink);
+    font:inherit;font-size:13px;
+  }
+  .pc-search input::-webkit-search-cancel-button{display:none}
+  .pc-search input::placeholder{color:var(--ink-3)}
+  /* ⌘K 提示角标：命令面板入口的可见性 */
+  .pc-search-kbd{
+    flex:none;display:inline-flex;align-items:center;height:20px;padding:0 6px;
+    border:1px solid var(--line);border-radius:6px;
+    font-family:inherit;font-size:10px;letter-spacing:.02em;color:var(--ink-3);
+    pointer-events:none;transition:border-color .2s ease,color .2s ease;
+  }
+  .pc-search:focus-within .pc-search-kbd{border-color:var(--ink);color:var(--ink-2)}
+  html.pk-aside-collapsed .pc-search-kbd{display:none}
+  /* 内联搜索结果：贴在输入框正下方的下拉面板，宽度跟侧栏走（左对齐铺满卡片内宽） */
+  .pc-search-pop{
+    position:absolute;top:calc(100% + 8px);left:0;right:0;
+    width:auto;max-width:calc(100vw - 40px);
+    max-height:44vh;overflow:auto;-webkit-overflow-scrolling:touch;
+    padding:10px 12px;
+    background:var(--surface);color:var(--ink);
+    border:1px solid var(--line);border-radius:var(--radius);
+    z-index:80;
+    opacity:0;transform:translateY(-6px);
+    transition:opacity .18s ease,transform .18s ease;
+  }
+  .pc-search-pop.is-shown{opacity:1;transform:translateY(0)}
+  /* 侧栏收起（72px）：搜索框收成一枚图标，点它展开侧栏并聚焦输入框 */
+  html.pk-aside-collapsed .pc-side-top{margin:0 0 10px}
+  html.pk-aside-collapsed .pc-search{
+    width:48px;height:38px;padding:0;gap:0;justify-content:center;
+    border-color:transparent;background:transparent;
+  }
+  html.pk-aside-collapsed .pc-search input,
+  html.pk-aside-collapsed .pc-search-pop{display:none}
+  html.pk-aside-collapsed .pc-search:focus-within{border-color:transparent}
+  html.pk-aside-collapsed .pc-search-ico{color:var(--ink-2)}
+  /* 顶栏工具组：PC 全部撤到侧栏，顶栏不再有它 */
+  .site-head .head-tools{display:none}
+  /* 顶栏精简后只剩品牌：Logo 图标 + 站点名称并排（菜单栏也一并下线） */
+  .site-head .mark{height:40px}
+  .site-head .mark-text{color:var(--ink)}
+  /* 与搜索框同一组，右侧留 6px 间距 */
+  .site-head nav .head-user{margin-left:6px}
+  .pc-search-pop[hidden]{display:none}
+  /* 滚动从固定框移到内部容器：边框留在不可滚动的固定框上，
+     避免 position:fixed + overflow + 右侧边框在滚动时亚像素重绘抖动（侧边框一闪一闪） */
+  /* 基础样式的 min-height:100vh 必须归零：否则容器比侧栏高出顶栏高度，
+     底部版权 / 折叠开关会被 overflow:hidden 裁到视口外 */
+  .pc-aside-inner{min-height:0;height:calc(100% - 24px);overflow-y:auto}
+  /* 顶栏全宽不偏移；内容区在侧栏右侧让位 */
+  .wrap{margin-left:var(--sidebar-w);margin-right:0}
+  .site-head .wrap{margin-left:0;margin-right:auto;max-width:none}
+  /* 铺满屏幕：内容区右到视口边缘（左右各 20px padding），不再限死 1080，也不额外预留 72px */
+  .wrap{max-width:calc(100vw - var(--sidebar-w))}
+  /* PC 顶栏：logo 显示在 nav 左侧（默认 space-between：logo 左、工具组右） */
+  /* 卡片网格：列数跟侧栏状态走（展开 3 列 / 收起 4 列），列宽 1fr 自适应；
+     JS 分页器按 getComputedStyle 读出的真实列数决定每页卡片数（列数 x 3 行） */
+  .feed{
+    display:grid;
+    /* 1fr = minmax(auto,1fr)，图片未解码完成时最小内容宽度会把列撑爆，
+       必须显式 minmax(0,1fr) 把最小值锁 0，卡片里才不会闪出原图尺寸 */
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:28px 22px;
+    align-items:start;
+  }
+  html.pk-aside-collapsed .feed{grid-template-columns:repeat(4,minmax(0,1fr))}
+  /* 分页器：当前页黑底白字，其余描边 */
+  .pk-pager{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin:38px 0 6px}
+  .pk-pager[hidden]{display:none}
+  .pk-pager button{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:36px;height:36px;padding:0 10px;
+    border:1px solid var(--line);border-radius:var(--radius);background:transparent;
+    color:var(--ink-2);font-size:13px;font-weight:500;cursor:pointer;
+    transition:color .2s,border-color .2s,background-color .2s;
+  }
+  .pk-pager button svg{width:15px;height:15px}
+  .pk-pager button:hover{color:var(--ink);border-color:var(--ink)}
+  .pk-pager button.is-active{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+  .pk-pager button:disabled{opacity:.35;cursor:default;pointer-events:none}
+  .pk-pager .pk-pager-gap{min-width:22px;text-align:center;color:var(--ink-3);font-size:13px}
+  .card-visual{aspect-ratio:4/3}
+  .card-title{font-size:16px}
+  /* 阅读层从侧栏右侧铺满；正文靠左对齐（有侧栏时不再居中留白） */
+  .detail-body{margin:0}
+}
+
+/* ============================================================
+   文章右侧栏（≥1280px）：正文左列 + 目录 / 作者卡右列
+   右栏用 sticky 跟随正文滚动，底部留出悬浮条空间；随阅读层一起被 Swup 交换
+   ============================================================ */
+@media (min-width:1280px){
+  /* 正文 + 评论 + 右栏整体居中收拢：宽屏下中间不再空一大块，
+     左右余量对称（正文右移、右栏左移）；头图在 grid 外仍然满铺内容区 */
+  .detail-grid{
+    display:grid;
+    grid-template-columns:minmax(0,760px) minmax(220px,300px);
+    column-gap:clamp(40px,6vw,120px);
+    justify-content:center;
+    align-items:start;
+  }
+  #detail .detail-body{grid-column:1}
+  .read-rail{
+    display:block;grid-column:2;grid-row:1 / span 2;
+    position:sticky;top:calc(var(--head-h,72px) + 28px);
+    align-self:start;
+    margin-top:118px; /* 卡片顶到文章标题下方，与头图拉开空隙 */
+    max-height:calc(100vh - var(--head-h,72px) - 170px);
+    overflow-y:auto;overscroll-behavior:contain;
+    scrollbar-width:none;
+  }
+  .read-rail::-webkit-scrollbar{width:0;height:0}
+}
+
+/* ============================================================
+   用户中心
+   ============================================================ */
+/* 顶栏用户入口：工具组最右侧（PC 紧挨搜索框，手机在图标组末尾） */
+.head-user{
+  display:inline-flex;width:34px;height:34px;flex:none;align-items:center;justify-content:center;
+  color:var(--ink-2);border-radius:var(--radius);transition:color .2s;
+}
+.head-user:hover,.head-user:focus-visible,.head-user.is-active{color:var(--ink)}
+/* 阅读态头部透明浮在封面上：图标跟着 --head-icon 走，避免白底白图标 */
+.site-head.reading .head-user,.site-head.is-single .head-user{color:var(--head-icon)}
+
+.user-wrap{padding-top:32px;padding-bottom:80px}
+.user-inner{max-width:720px;margin:0 auto}
+.user-title{margin:0 0 8px;font-size:26px;font-weight:600;letter-spacing:.01em;line-height:1.3}
+.user-sub{margin:0 0 22px;font-size:13px;line-height:1.8;color:var(--ink-2)}
+.user-tabs{display:flex;gap:22px;margin:0 0 20px;border-bottom:1px solid var(--line)}
+.user-tab{padding:9px 0;margin-bottom:-1px;font-size:14px;color:var(--ink-2);text-decoration:none;border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
+.user-tab:hover{color:var(--ink)}
+.user-tab.is-active{color:var(--ink);border-bottom-color:var(--ink)}
+.user-notice{margin:0 0 18px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);font-size:13px;line-height:1.7;color:var(--ink)}
+.user-form{max-width:360px}
+.user-form label{display:block;margin:0 0 14px;font-size:13px;color:var(--ink-2)}
+.user-form input[type=text],.user-form input[type=email],.user-form input[type=password]{
+  display:block;width:100%;margin-top:6px;padding:10px 12px;
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;
+}
+.user-form .user-remember{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:13px}
+.user-form .user-remember input{width:16px;height:16px;margin:0;accent-color:var(--ink)}
+.user-submit{
+  display:block;width:100%;margin-top:4px;padding:11px 16px;
+  border:1px solid var(--ink);border-radius:var(--radius);background:var(--ink);color:var(--bg);
+  font-size:14px;cursor:pointer;transition:opacity .2s;
+}
+.user-submit:hover{opacity:.82}
+.user-head{display:flex;align-items:center;gap:14px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.user-avatar{width:64px;height:64px;flex:none;border-radius:50%;object-fit:cover;background:var(--soft)}
+.user-avatar-letter{display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;color:var(--ink)}
+.user-id{flex:1;min-width:0}
+.user-name{margin:0;font-size:20px;font-weight:600;letter-spacing:.01em;line-height:1.4}
+.user-since{margin:4px 0 0;font-size:12px;color:var(--ink-2)}
+.user-logout{flex:none;padding:6px 2px;font-size:13px;color:var(--ink-2);text-decoration:none;transition:color .2s}
+.user-logout:hover{color:var(--ink)}
+.user-stats{display:flex;gap:34px;margin-top:20px}
+.user-stat{color:inherit;text-decoration:none;transition:opacity .2s}
+.user-stat:hover{opacity:.7}
+.user-stat b{display:block;font-size:20px;font-weight:600;line-height:1.2}
+.user-stat span{display:block;margin-top:3px;font-size:12px;color:var(--ink-2)}
+/* 动作条位置：三段式分段按钮，1px 描边 + 12px 圆角，无阴影 */
+.user-prefs{margin:22px 0 0;padding:16px 18px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.user-prefs-title{margin:0 0 6px;font-size:14px;font-weight:600;letter-spacing:.01em;line-height:1.4}
+.user-prefs-desc{margin:0 0 12px;font-size:12px;line-height:1.7;color:var(--ink-2)}
+.user-seg{display:flex;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--soft)}
+.user-seg-btn{
+  flex:1;min-width:0;padding:8px 6px;font-size:13px;color:var(--ink-2);
+  background:transparent;border:0;border-radius:8px;cursor:pointer;
+  transition:background-color .2s ease,color .2s ease;
+}
+.user-seg-btn:hover{color:var(--ink)}
+.user-seg-btn.is-active{background:var(--ink);color:var(--bg)}
+.user-prefs-saved{margin:0;font-size:12px;line-height:1.6;color:var(--ink-2)}
+.user-prefs-saved:not(:empty){margin-top:10px}
+.user-hint{margin:18px 0 0;font-size:12px;line-height:1.7;color:var(--ink-2)}
+
+/* ============================================================
+   0.13.6 个人中心：账号设置（昵称 / 头像）/ 注销账号
+   卡片沿用 .user-prefs 的 1px 描边 + 12px 圆角，无阴影
+   ============================================================ */
+.user-notice.is-err{border-color:var(--ink)}
+/* 0.13.24 个人中心：群绑定资料（QQ / 群内昵称 / 进群时间 / 最近活跃） */
+.user-unlock{margin:22px 0 0;padding:16px 18px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.user-unlock-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.user-unlock-title{display:flex;align-items:center;gap:7px;margin:0;font-size:14px;font-weight:600;line-height:1.4;letter-spacing:.01em}
+.user-unlock-title .pk-unlock-ico{width:16px;height:16px}
+.user-unlock-state{flex:none;padding:4px 9px;border:1px solid var(--line);border-radius:999px;font-size:11px;line-height:1.4;color:var(--ink-3)}
+.user-unlock-state.is-ok{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.user-unlock-state.is-left,
+.user-unlock-state.is-expired{border-color:var(--ink);color:var(--ink)}
+.user-unlock-desc{margin:10px 0 14px;font-size:12px;line-height:1.7;color:var(--ink-2)}
+.user-unlock-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px;margin:0}
+.user-unlock-item{min-width:0}
+.user-unlock-item dt{font-size:11.5px;line-height:1.5;color:var(--ink-3)}
+.user-unlock-item dd{margin:3px 0 0;font-size:13px;line-height:1.6;color:var(--ink);word-break:break-word}
+.user-unlock-src{margin-left:6px;font-size:11px;color:var(--ink-3)}
+.user-unlock-code{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:16px;padding:9px 12px;border:1px solid var(--line);border-radius:10px}
+.user-unlock-code-label{font-size:12px;color:var(--ink-3)}
+.user-unlock-code-val{flex:1 1 auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;font-weight:600;letter-spacing:.12em;color:var(--ink)}
+.user-unlock-copy{font-size:12px;color:var(--ink-2)!important;text-decoration:none;padding:5px 9px;border:1px solid var(--line);border-radius:8px;transition:color .2s,border-color .2s}
+.user-unlock-copy:hover{color:var(--ink)!important;border-color:var(--ink-2)}
+.user-unlock-join{display:inline-flex;align-items:center;justify-content:center;min-height:34px;margin-top:14px;padding:7px 16px;border:1px solid var(--ink);border-radius:10px;background:var(--ink);color:var(--bg)!important;font-size:12px;font-weight:500;text-decoration:none;transition:opacity .2s}
+.user-unlock-join:hover{opacity:.86}
+@media (max-width:600px){.user-unlock-grid{grid-template-columns:1fr;gap:10px}}
+.user-account{margin:22px 0 0;padding:16px 18px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.user-account-title{margin:0 0 14px;font-size:14px;font-weight:600;letter-spacing:.01em;line-height:1.4}
+.user-avatar-edit{display:flex;align-items:center;gap:14px;margin:0 0 16px}
+.user-avatar-edit-img{display:inline-flex;flex:none}
+.user-avatar-edit-body{min-width:0}
+.user-avatar-pick{
+  display:inline-flex;align-items:center;height:32px;padding:0 14px;
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);
+  font-size:12px;color:var(--ink);cursor:pointer;
+  transition:border-color .2s ease;
+}
+.user-avatar-pick:hover{border-color:var(--ink)}
+.user-avatar-pick:focus-within{border-color:var(--ink)}
+/* 文件框视觉隐藏但保留可聚焦（label for 触发选择） */
+.pk-file{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+}
+.user-account-hint{margin:8px 0 0;font-size:12px;line-height:1.6;color:var(--ink-2)}
+.user-field{display:block;margin:0 0 14px;font-size:12px;color:var(--ink-2)}
+.user-field>span{display:block;margin-bottom:6px}
+.user-field input{
+  display:block;width:100%;padding:10px 12px;box-sizing:border-box;
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;
+  transition:border-color .2s ease;
+}
+.user-field input:focus{outline:none;border-color:var(--ink)}
+.user-submit-inline{width:auto;min-width:112px;padding:9px 18px;margin-top:2px;font-size:13px}
+.user-danger{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  margin-top:18px;padding-top:16px;border-top:1px solid var(--line);
+}
+.user-danger-text{min-width:0}
+.user-danger-title{margin:0 0 4px;font-size:13px;font-weight:600;line-height:1.4}
+.user-danger-desc{margin:0;font-size:12px;line-height:1.6;color:var(--ink-2)}
+.user-danger-btn{
+  flex:none;height:32px;padding:0 14px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--bg);color:var(--ink);
+  font-size:12px;cursor:pointer;transition:border-color .2s ease;
+}
+.user-danger-btn:hover{border-color:var(--ink)}
+@media (max-width:600px){
+  .user-danger{flex-direction:column;align-items:flex-start;gap:12px}
+  .user-danger-btn{width:100%}
+}
+
+/* 个人中心 → 账号设置：独立页面 /settings/，这里只留一个入口按钮 */
+.user-settings-btn{display:inline-flex;align-items:center;gap:8px;margin:20px 0 22px;padding:9px 18px;border:1px solid var(--ink);border-radius:999px;background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;text-decoration:none;transition:opacity .2s}
+.user-settings-btn:hover,.user-settings-btn:focus-visible{opacity:.85}
+.user-settings-btn .pk-icon{width:16px;height:16px}
+/* a 形态按钮：压过 body.pk-body a{color:inherit}，否则黑底黑字（暗黑白底白字） */
+body.pk-body a.user-settings-btn{color:var(--bg);text-decoration:none}
+
+/* /settings/ 独立页：沿用 /user/ 的 .pk-user-page 宽容器与统一头部，
+   只补返回行（放在头部内、标题下方）与两块卡片的间距 */
+.pk-settings-back{margin:12px 0 0}
+body.pk-body a.pk-settings-back{color:var(--ink-2);text-decoration:none}
+body.pk-body a.pk-settings-back:hover,body.pk-body a.pk-settings-back:focus-visible{color:var(--ink)}
+.pk-settings-page .user-unlock,
+.pk-settings-page .user-account{max-width:720px;margin-top:22px}
+
+/* 注销确认弹窗：原生 dialog，点遮罩关闭 */
+.pk-del{
+  width:min(92vw,400px);padding:0;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--bg);color:var(--ink);
+}
+.pk-del::backdrop{background:rgba(0,0,0,.42)}
+.pk-del-form{padding:20px}
+.pk-del-title{margin:0 0 8px;font-size:17px;font-weight:600;line-height:1.4}
+.pk-del-desc{margin:0 0 16px;font-size:12px;line-height:1.7;color:var(--ink-2)}
+.pk-del-field{display:block;margin:0 0 12px;font-size:12px;color:var(--ink-2)}
+.pk-del-field>span{display:block;margin-bottom:6px}
+.pk-del-field input{
+  display:block;width:100%;padding:9px 11px;box-sizing:border-box;
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;
+}
+.pk-del-field input:focus{outline:none;border-color:var(--ink)}
+.pk-del-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.pk-del-cancel,.pk-del-submit{height:36px;padding:0 16px;border-radius:var(--radius);font-size:13px;cursor:pointer}
+.pk-del-cancel{border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.pk-del-cancel:hover{border-color:var(--ink)}
+.pk-del-submit{border:1px solid var(--ink);background:var(--ink);color:var(--bg)}
+.pk-del-submit:disabled{opacity:.36;cursor:not-allowed}
+
+/* ============================================================
+   登录 / 注册：/login/ 整页 + 全站弹窗共用一张卡片
+   黑白、1px 描边、12 圆角、无阴影；动效只在数字与滑块上
+   ============================================================ */
+.auth-wrap{padding:48px 0 80px}
+.auth-page{max-width:420px;margin:0 auto}
+.auth-card{
+  position:relative;padding:28px 26px 22px;
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+}
+.auth-card.is-dialog{padding:26px 24px 20px;border:0;border-radius:0;background:transparent}
+.auth-mark{margin:0 0 10px;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.auth-title{margin:0;font-size:23px;font-weight:600;line-height:1.3;letter-spacing:.01em;color:var(--ink)}
+.auth-sub{margin:7px 0 0;font-size:13px;line-height:1.7;color:var(--ink-2)}
+/* 关闭按钮：圆形无底色，压在卡片右上 */
+.auth-close{
+  position:absolute;top:10px;right:10px;width:34px;height:34px;
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:0;border:0;border-radius:50%;background:transparent;color:var(--ink-2);
+  cursor:pointer;transition:color .2s,background-color .2s;
+}
+.auth-close:hover{color:var(--ink);background:var(--soft)}
+.auth-close:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+/* 分段切换：两条等宽 tab + 一根滑动的黑条 */
+.auth-tabs{position:relative;display:flex;gap:0;margin:20px 0 18px;border-bottom:1px solid var(--line)}
+.auth-tabs .auth-tab{
+  flex:1;min-width:0;padding:10px 0;margin:0;text-align:center;
+  font-size:13.5px;color:var(--ink-3);border-bottom:0;transition:color .22s ease;
+}
+.auth-tabs .auth-tab:hover{color:var(--ink-2)}
+.auth-tabs .auth-tab.is-active{color:var(--ink);border-bottom-color:transparent}
+.auth-ink{
+  position:absolute;left:0;bottom:-1px;width:50%;height:2px;
+  background:var(--ink);border-radius:2px;
+  transition:transform .34s cubic-bezier(.2,.8,.2,1);
+}
+.auth-tabs.is-register .auth-ink{transform:translateX(100%)}
+/* 错误条：浅底 + 左侧黑条，不用红色 */
+.auth-err{
+  margin:0 0 14px;padding:9px 12px;border-left:2px solid var(--ink);border-radius:6px;
+  background:var(--soft);font-size:12.5px;line-height:1.65;color:var(--ink);
+}
+.auth-err[hidden]{display:none}
+.auth-panel[hidden]{display:none}
+.auth-field{margin:0 0 13px}
+.user-form .auth-field{display:block;font-size:12.5px;color:var(--ink-2)}
+.auth-field span{display:block;margin-bottom:5px}
+.user-form .auth-remember{display:flex;align-items:center;gap:8px;margin:2px 0 16px;font-size:12.5px;color:var(--ink-2)}
+.user-form .auth-remember input{width:15px;height:15px;margin:0;accent-color:var(--ink)}
+.auth-submit{margin-top:6px}
+.auth-note{margin:16px 0 0;font-size:11.5px;line-height:1.7;color:var(--ink-3)}
+.auth-hint{margin:0;font-size:13px;line-height:1.7;color:var(--ink-2)}
+.auth-page-foot{margin:18px 0 0;text-align:center;font-size:12.5px;color:var(--ink-3)}
+.auth-page-foot a{color:var(--ink-2);text-decoration:none;transition:color .2s}
+.auth-page-foot a:hover{color:var(--ink)}
+.auth-page-foot span{margin:0 8px}
+.auth-signed{display:flex;align-items:center;gap:14px;margin-top:18px}
+.auth-signed .auth-submit{flex:1;margin:0}
+.auth-back{flex:none;font-size:13px;color:var(--ink-2);text-decoration:none;transition:color .2s}
+.auth-back:hover{color:var(--ink)}
+/* 提交失败时卡片轻轻抖一下，比弹 toast 更贴近表单 */
+@keyframes pk-auth-shake{
+  0%,100%{transform:translateX(0)}
+  22%{transform:translateX(-4px)}
+  44%{transform:translateX(3px)}
+  66%{transform:translateX(-2px)}
+  88%{transform:translateX(1px)}
+}
+.auth-card.is-shake{animation:pk-auth-shake .4s ease}
+
+/* ---------- 登录弹窗 ---------- */
+.auth-dialog{
+  width:min(420px,calc(100% - 28px));max-height:calc(100vh - 40px);
+  padding:0;border:1px solid var(--line);border-radius:16px;
+  background:var(--bg);color:var(--ink);overflow:auto;
+  transition:transform .22s var(--ease),opacity .22s ease;
+}
+.auth-dialog:not([open]){display:none}
+.auth-dialog::backdrop{background:rgba(0,0,0,.46);transition:opacity .22s ease}
+.auth-dialog.is-closing{opacity:0;transform:scale(.96) translateY(6px)}
+.auth-dialog-inner{padding:26px 24px 22px}
+/* 弹窗打开时锁住背景滚动 */
+html.pk-auth-open{overflow:hidden}
+@media (max-width:519px){
+  .auth-wrap{padding:24px 0 60px}
+  .auth-card{padding:24px 20px 18px}
+  .auth-dialog-inner{padding:22px 20px 18px}
+}
+
+/* ============================================================
+   滑块人机校验（自写）
+   状态全写在 data-state 上：idle / drag / checking / ok / fail
+   ============================================================ */
+.pk-cap{margin:14px 0 2px}
+.pk-cap-track{
+  position:relative;height:46px;border:1px solid var(--line);border-radius:10px;
+  background:var(--soft);overflow:hidden;
+  user-select:none;-webkit-user-select:none;touch-action:none;
+  transition:border-color .22s ease;
+}
+.pk-cap-fill{
+  position:absolute;left:0;top:0;bottom:0;width:0;
+  background:var(--ink);opacity:.1;
+  transition:width .34s cubic-bezier(.34,1.3,.64,1),opacity .3s ease;
+}
+.pk-cap-hint{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:var(--ink-3);letter-spacing:.02em;
+  transition:opacity .2s ease;pointer-events:none;
+}
+.pk-cap-pass{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:13px;color:var(--ink);opacity:0;transform:translateY(4px);
+  transition:opacity .26s ease,transform .26s ease;pointer-events:none;
+}
+.pk-cap-thumb{
+  position:absolute;left:4px;top:4px;z-index:3;
+  width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;
+  padding:0;border:1px solid var(--line);border-radius:8px;
+  background:var(--bg);color:var(--ink-2);cursor:grab;
+  touch-action:none;
+  transition:transform .34s cubic-bezier(.34,1.3,.64,1),
+             background-color .24s ease,border-color .24s ease,color .24s ease;
+}
+.pk-cap-thumb:active,.pk-cap-thumb.is-dragging{cursor:grabbing}
+.pk-cap-thumb:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.pk-cap-ico{display:inline-flex;align-items:center;justify-content:center}
+.pk-cap-ico-ok{position:absolute;opacity:0;transform:scale(.7);transition:opacity .2s ease,transform .24s ease}
+.pk-cap-spin{
+  position:absolute;width:15px;height:15px;border:2px solid transparent;border-top-color:var(--ink-2);
+  border-radius:50%;opacity:0;animation:pk-cap-spin .8s linear infinite;
+}
+@keyframes pk-cap-spin{to{transform:rotate(360deg)}}
+
+.pk-cap[data-state="drag"] .pk-cap-fill{opacity:.14}
+.pk-cap[data-state="checking"] .pk-cap-ico-go{opacity:0}
+.pk-cap[data-state="checking"] .pk-cap-spin{opacity:1}
+/* 通过：滑块变黑条、轨道描黑、提示文字换成对勾 */
+.pk-cap[data-state="ok"] .pk-cap-thumb{background:var(--ink);border-color:var(--ink);color:var(--bg);cursor:default}
+.pk-cap[data-state="ok"] .pk-cap-ico-go{opacity:0}
+.pk-cap[data-state="ok"] .pk-cap-ico-ok{opacity:1;transform:none}
+.pk-cap[data-state="ok"] .pk-cap-fill{opacity:.16}
+.pk-cap[data-state="ok"] .pk-cap-hint{opacity:0}
+.pk-cap[data-state="ok"] .pk-cap-pass{opacity:1;transform:none}
+.pk-cap[data-state="ok"] .pk-cap-track{border-color:var(--ink)}
+.pk-cap[data-state="fail"] .pk-cap-thumb{color:var(--ink-2)}
+/* 失败：整条轨道左右抖一下 */
+@keyframes pk-cap-shake{
+  0%,100%{transform:translateX(0)}
+  18%{transform:translateX(-5px)}
+  38%{transform:translateX(4px)}
+  58%{transform:translateX(-3px)}
+  78%{transform:translateX(2px)}
+}
+.pk-cap-track.is-shake{animation:pk-cap-shake .46s ease}
+.pk-cap-msg{margin:7px 0 0;font-size:12px;line-height:1.6;color:var(--ink-2)}
+.pk-cap-msg:empty{display:none}
+/* 极验 v4：与自研滑块共用同一张票据，只把轨道换成极验按钮。
+   两套 DOM 常驻，由 .pk-cap 上的 data-pk-cap-mode 决定谁显示；
+   脚本 / 接口连不上时前台把模式改回 local 即可无刷新切回滑块。 */
+.pk-cap-geetest{display:none;min-height:50px;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:2px 0}
+.pk-cap-geetest-mount{display:inline-flex;align-items:center;justify-content:center}
+.pk-cap-geetest-ok{display:none;align-items:center;gap:6px;font-size:13px;color:var(--ink)}
+.pk-cap-geetest-ok svg{width:14px;height:14px}
+.pk-cap[data-pk-cap-mode="geetest"] .pk-cap-track{display:none}
+.pk-cap[data-pk-cap-mode="geetest"] .pk-cap-geetest{display:flex}
+.pk-cap[data-pk-cap-mode="geetest"][data-state="checking"] .pk-cap-geetest-mount{opacity:.55}
+.pk-cap[data-pk-cap-mode="geetest"][data-state="ok"] .pk-cap-geetest-mount{display:none}
+.pk-cap[data-pk-cap-mode="geetest"][data-state="ok"] .pk-cap-geetest-ok{display:inline-flex}
+/* 评论抽屉里宽度更窄，间距收紧；表单是横向 flex，滑块要独占一行 */
+#respond .comment-form .pk-cap{flex:0 0 100%;width:100%;margin:0 0 2px}
+/* 点提交后才出现：跟上面的输入框拉开一点，别贴在一起 */
+#respond .comment-form .pk-cap.is-revealed{margin:10px 0 4px}
+.detail-comments .pk-cap{margin:12px 0 4px}
+.detail-comments .pk-cap-track{height:44px}
+.detail-comments .pk-cap-thumb{width:36px;height:36px}
+
+@media (prefers-reduced-motion: reduce){
+  .auth-dialog,.auth-dialog::backdrop,.auth-ink,.pk-cap-fill,.pk-cap-thumb,
+  .pk-cap-hint,.pk-cap-pass,.pk-cap-ico-ok{transition:none}
+  .auth-card.is-shake,.pk-cap-track.is-shake{animation:none}
+  .pk-cap-spin{animation-duration:2.4s}
+}
+
+/* 通行密钥：指纹 / Face ID。按钮用描边变体与主操作区分 */
+.user-submit-alt{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  background:transparent;color:var(--ink);border:1px solid var(--line);
+  transition:border-color .2s,opacity .2s;
+}
+.user-submit-alt:hover{border-color:var(--ink);opacity:1}
+.user-passkey{margin-top:14px}
+.user-passkey-note{margin:8px 0 0;font-size:12px;line-height:1.7;color:var(--ink-2)}
+.user-passkey .pk-icon{flex:none}
+.pk-key-list{list-style:none;margin:0 0 12px;padding:0}
+.pk-key{
+  display:flex;align-items:center;gap:12px;padding:10px 2px;
+  border-bottom:1px solid var(--line);
+}
+.pk-key:last-child{border-bottom:0}
+.pk-key-ico{flex:none;display:inline-flex;color:var(--ink)}
+.pk-key-body{flex:1;min-width:0}
+.pk-key-body b{display:block;font-size:13px;font-weight:600;line-height:1.5}
+.pk-key-body span{display:block;font-size:12px;color:var(--ink-2)}
+.pk-key-remove{
+  flex:none;display:inline-flex;align-items:center;gap:5px;padding:6px 10px;
+  border:1px solid var(--line);border-radius:10px;background:transparent;
+  font-size:12px;color:var(--ink-2);cursor:pointer;
+  transition:border-color .2s,color .2s;
+}
+.pk-key-remove:hover{border-color:var(--ink);color:var(--ink)}
+.pk-key-remove:disabled{opacity:.5;cursor:default}
+#pk-passkeys .user-submit{max-width:280px}
+.user-list{margin-top:4px}
+.user-posts{display:grid;grid-template-columns:1fr;gap:0}
+@media (min-width:768px){.user-posts{grid-template-columns:1fr 1fr;gap:0 22px}}
+.user-post{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;transition:opacity .2s}
+.user-post:hover{opacity:.72}
+.user-post-thumb{width:92px;flex:none;aspect-ratio:4/3;border-radius:var(--radius);overflow:hidden;background:var(--soft)}
+.user-post-thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.user-post-body{display:flex;flex-direction:column;justify-content:center;min-width:0}
+.user-post-title{
+  display:-webkit-box;overflow:hidden;font-size:14px;font-weight:600;line-height:1.5;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+.user-post-meta{margin-top:6px;font-size:12px;color:var(--ink-2)}
+.user-comment{padding:14px 0;border-bottom:1px solid var(--line)}
+.user-comment-text{margin:0;font-size:14px;line-height:1.75;color:var(--ink);word-break:break-word}
+.user-comment-meta{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;font-size:12px;color:var(--ink-2)}
+.user-comment-meta a{color:var(--ink-2);text-decoration:none}
+.user-comment-meta a:hover{color:var(--ink)}
+.user-empty{margin:0;padding:54px 0;text-align:center;font-size:13px;color:var(--ink-2)}
+
+/* ============================================================
+   0.11.16 · 滚动驱动动画 / 灵动岛胶囊 / 手势翻篇 / 专注模式
+   全部走「基础态即完成态 + @supports 增强」，Firefox / 减少动态效果
+   下看到的是正常静态页面，不会留下一堆 opacity:0 的空白。
+   ============================================================ */
+
+/* 命名 scroll timeline 挂在阅读层这个真正的滚动容器上；
+   .pk-progress 是它的 DOM 后代，才能引用到 --pk-reading */
+.detail{scroll-timeline-name:--pk-reading;scroll-timeline-axis:block}
+
+/* 阅读进度条：不支持时整条隐去（不显示静止黑线） */
+.pk-progress{
+  position:fixed;top:0;left:0;right:0;height:2px;z-index:70;
+  background:var(--ink);transform:scaleX(0);transform-origin:0 50%;
+  opacity:0;pointer-events:none;
+}
+@keyframes pk-progress-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes pk-hero-fade{from{opacity:1}to{opacity:.14}}
+@keyframes pk-reveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* animation 简写会重置 animation-timeline，必须写在后面 */
+    .pk-progress{opacity:1;animation:pk-progress-grow linear both;animation-timeline:--pk-reading}
+    /* 只做 opacity，不叠 transform：marquee 的 .hero-track 已有横向动画 */
+    .detail-hero{animation:pk-hero-fade linear both;animation-timeline:view();animation-range:exit -5% exit 95%}
+    .detail-body .prose > p,
+    .detail-body .prose > h2,
+    .detail-body .prose > h3,
+    .detail-body .prose > blockquote,
+    .detail-body .prose > ul,
+    .detail-body .prose > ol,
+    .detail-body .prose > figure{
+      animation:pk-reveal linear both;
+      animation-timeline:view();
+      animation-range:entry 0% cover 16%;
+    }
+  }
+}
+/* 目录当前项：JS 用 IntersectionObserver 互斥高亮（零 scroll 监听、零布局读取） */
+.pk-toc-list a.is-current{color:var(--ink);font-weight:600}
+
+/* --- 灵动岛式胶囊：常驻公共区，pjax 换页不销毁 --- */
+.pk-island{
+  position:fixed;z-index:72;
+  top:calc(env(safe-area-inset-top,0px) + 9px);left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;height:34px;padding:0 8px 0 5px;
+  background:var(--ink);color:var(--bg);border-radius:20px;
+  font-size:11px;line-height:1;letter-spacing:.02em;
+  transition:opacity .22s ease,transform .22s var(--ease);
+}
+.pk-island[hidden]{display:none}
+.pk-island.is-hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(-10px)}
+.island-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;flex:none;padding:0;border:0;border-radius:50%;
+  background:transparent;color:inherit;cursor:pointer;
+}
+.island-btn:hover{opacity:.6}
+.island-btn svg{display:block}
+.island-sep{width:1px;height:14px;flex:none;background:currentColor;opacity:.28}
+.island-meter{width:42px;height:3px;flex:none;border-radius:3px;background:currentColor;opacity:.28;overflow:hidden}
+.island-meter i{display:block;width:0;height:100%;background:currentColor}
+.island-pct{min-width:30px;text-align:right;font-variant-numeric:tabular-nums;color:inherit}
+.island-ico{display:inline-flex}
+.island-ico-pause{display:none}
+.pk-island.is-reading .island-ico-play{display:none}
+.pk-island.is-reading .island-ico-pause{display:inline-flex}
+.pk-island.is-speaking .island-read{opacity:1}
+.pk-island.is-focus .island-focus{background:currentColor}
+.pk-island.is-focus .island-focus svg{color:var(--ink)}
+
+/* 专注模式：隐藏所有外围 chrome，只留正文与胶囊（胶囊仍可退出） */
+html.pk-focus .site-head,
+html.pk-focus .pk-dock,
+html.pk-focus .read-rail,
+html.pk-focus .pc-aside,
+html.pk-focus [data-pk-foot-wrap]{visibility:hidden;pointer-events:none}
+
+/* --- 手势翻篇 --- */
+.detail{touch-action:pan-y;overscroll-behavior-x:contain}
+/* 手势翻篇只移动「头图 + 正文列」：.detail-inner 保持不动，
+   否则 transform 会给 position:fixed 的悬浮条造包含块，dock / 侧栏跟着一起跑 */
+.overlay.is-swiping .detail-hero,
+.overlay.is-swiping .detail-body{transition:none;will-change:transform}
+.overlay.is-swiping .pk-swipe-pane,
+.overlay.is-swiping .pk-swipe-veil,
+.overlay.is-swiping .detail-hero img{transition:none}
+.overlay.is-snapping .detail-hero,
+.overlay.is-snapping .detail-body{transition:transform .26s var(--ease);will-change:transform}
+.overlay.is-snapping .pk-swipe-pane{transition:transform .26s var(--ease),opacity .26s var(--ease),border-radius .26s var(--ease)}
+.overlay.is-snapping .pk-swipe-veil{transition:opacity .26s var(--ease)}
+.overlay.is-snapping .detail-hero img{transition:transform .26s var(--ease)}
+/* 目标文章的整屏预览：跟手从另一侧进来，交换时与真实内容对齐，翻篇不留接缝 */
+.pk-swipe-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:2}
+/* 0.13.17 层次特效：当前页被纯黑罩层压暗退到后层，目标页以「带圆角的卡片」
+   放大进来；pane 自己裁剪圆角，到 0 位时圆角归零、缩放归 1，与真实页面完全重合。
+   全部 transform / opacity / border-radius 合成属性，不用渐变 / 阴影 / 模糊。 */
+.pk-swipe-veil{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:#000;opacity:0;will-change:opacity;
+}
+.pk-swipe-pane{
+  position:absolute;inset:0;overflow:hidden;
+  transform-origin:50% 50%;will-change:transform,opacity;
+}
+.pk-swipe-pane .pk-swipe-detail{position:absolute;inset:0;overflow:hidden}
+/* 侧栏是「旁边的组件」，滑动时稳稳待着，压在预览之上 */
+.overlay.is-swiping .read-rail,
+.overlay.is-snapping .read-rail{z-index:3}
+.pk-swipe-hint{
+  position:fixed;z-index:73;
+  top:calc(env(safe-area-inset-top,0px) + 54px);left:50%;
+  transform:translateX(-50%) translateY(-8px);
+  display:flex;align-items:center;gap:5px;
+  max-width:min(84vw,360px);padding:8px 14px;
+  background:var(--ink);color:var(--bg);border-radius:20px;
+  font-size:12px;line-height:1.4;
+  opacity:0;pointer-events:none;
+  transition:opacity .18s ease,transform .18s var(--ease);
+}
+.pk-swipe-kind{flex:0 0 auto;font-weight:600;opacity:.66;letter-spacing:.02em}
+.pk-swipe-kind::after{content:'：'}
+.pk-swipe-kind:empty{display:none}
+.pk-swipe-title{display:-webkit-box;overflow:hidden;-webkit-line-clamp:1;-webkit-box-orient:vertical;min-width:0}
+.pk-swipe-hint.is-show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ============================================================
+   站点信息页：文章归档 / 关于 / 联系 / 友情链接
+   与用户中心同宽（720），不抢文章阅读区的视觉重量
+   ============================================================ */
+.pk-page-wrap{padding-top:28px;padding-bottom:80px}
+/* PC 内容区会被 .wrap 拉到满宽，这里收回 720 并居中，与用户中心同宽 */
+.pk-page-inner{max-width:720px;margin:0 auto}
+.pk-page-head{margin-bottom:6px}
+.pk-page-title{margin:0;font-size:26px;font-weight:600;line-height:1.35;letter-spacing:.01em}
+.pk-page-sub{margin:8px 0 0;font-size:13px;line-height:1.7;color:var(--ink-3)}
+.pk-page-empty{margin:0;padding:36px 0;font-size:14px;color:var(--ink-3)}
+/* 分类卡片（以背景为主）：整卡铺分类最新文章首图，
+   左下角一枚白底圆角信息标签放分类名 / 篇数 / 描述；
+   不加脚部标签、不加前往箭头，文字不抢背景。
+   纯色半透明白底，无渐变 / 无阴影 / 无上浮。 */
+.pk-cats-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;
+  margin-top:18px;align-items:stretch;
+}
+.pk-cat-card{
+  position:relative;display:block;min-width:0;aspect-ratio:16/10;min-height:190px;overflow:hidden;
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--soft);color:var(--ink);text-decoration:none;
+  transition:border-color .2s var(--ease);
+}
+.pk-cat-card:hover,.pk-cat-card:focus-visible{border-color:var(--ink-3)}
+/* 背景铺满整卡，照片保留原色 */
+.pk-cat-visual{position:absolute;inset:0;display:block;width:100%;height:100%;overflow:hidden;background:var(--soft)}
+.pk-cat-visual img,.pk-cat-visual svg{width:100%;height:100%;display:block;object-fit:cover}
+/* 无图回退：整卡浅灰底 + 居中的首字 */
+.pk-cat-visual.is-empty{display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:52px;font-weight:600}
+/* 左下角信息标签：恒定白底深字。标签底色不随主题切换，
+   所以文字不能用 --ink / --ink-2 / --ink-3（暗黑下会变浅色，白底上看不见）。 */
+.pk-cat-main{
+  position:absolute;left:14px;right:14px;bottom:14px;
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;
+  padding:12px 14px;
+  background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:10px;
+  color:#000000;
+}
+.pk-cat-name{flex:1 1 auto;min-width:0;font-size:14px;font-weight:600;line-height:1.4;letter-spacing:.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-cat-count{flex:none;font-size:11.5px;color:#999999;font-variant-numeric:tabular-nums}
+.pk-cat-desc{flex:0 0 100%;font-size:12px;line-height:1.7;color:#666666;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media (min-width:768px){
+  .pk-cats-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+}
+@media (min-width:1280px){
+  .pk-cats-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+/* 0.13.26：分类页头部与网格统一到 /say/ 卡片流版式。
+   通用信息页外壳仍是 720px 居中；只有分类页（pk-cats-page）走宽容器、
+   22px 标题、--ink-2 描述与 1/2/3 列网格，避免影响其它信息页。 */
+.pk-cats-page.pk-page-wrap{padding-top:0;padding-bottom:64px}
+.pk-cats-page .pk-page-inner{max-width:1180px;margin:0}
+.pk-cats-page .pk-page-head{padding:34px 0 4px;margin-bottom:0}
+.pk-cats-page .pk-page-title{font-size:22px;font-weight:600;line-height:1.4;letter-spacing:.06em}
+.pk-cats-page .pk-page-sub{margin-top:8px;font-size:13px;line-height:1.7;color:var(--ink-2)}
+.pk-cats-page .pk-cats-grid{margin-top:22px;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:720px){.pk-cats-page .pk-cats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1200px){.pk-cats-page .pk-cats-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* 0.13.27：友情链接页同样统一到 /say/ 卡片流版式。
+   另起一组选择器，不合并进 .pk-cats-page 那几行——_cats-style-test 对它们有精确正则断言。 */
+.pk-links-page.pk-page-wrap{padding-top:0;padding-bottom:64px}
+.pk-links-page .pk-page-inner{max-width:1180px;margin:0}
+.pk-links-page .pk-page-head{padding:34px 0 4px;margin-bottom:0}
+.pk-links-page .pk-page-title{font-size:22px;font-weight:600;line-height:1.4;letter-spacing:.06em}
+.pk-links-page .pk-page-sub{margin-top:8px;font-size:13px;line-height:1.7;color:var(--ink-2)}
+.pk-links-page .pk-links{margin-top:22px;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:720px){.pk-links-page .pk-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1200px){.pk-links-page .pk-links{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* 关于页：同样统一到 /say/ 卡片流版式。另起一组选择器，
+   不动 .pk-cats-page / .pk-links-page 那几行（各有精确正则断言）。 */
+.pk-about-page.pk-page-wrap{padding-top:0;padding-bottom:64px}
+.pk-about-page .pk-page-inner{max-width:1180px;margin:0}
+.pk-about-page .pk-page-head{padding:34px 0 4px;margin-bottom:0}
+.pk-about-page .pk-page-title{font-size:22px;font-weight:600;line-height:1.4;letter-spacing:.06em}
+.pk-about-page .pk-page-sub{margin-top:8px;font-size:13px;line-height:1.7;color:var(--ink-2)}
+/* 长文保持可读行宽，不跟着 1180px 拉满 */
+.pk-about-page .pk-page-body.prose{margin-top:22px;max-width:720px;padding-top:0;border-top:0}
+/* 统计条改成同款卡片流：12px 圆角、1px 细线、14px gap，桌面 4 项一排 */
+.pk-about-page .pk-facts{
+  margin-top:22px;padding:0;border-top:0;border-bottom:0;
+  gap:14px;grid-template-columns:minmax(0,1fr);
+}
+.pk-about-page .pk-facts li{
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;gap:6px;background:var(--bg);
+  transition:border-color .2s ease;
+}
+.pk-about-page .pk-facts li:hover{border-color:var(--ink)}
+.pk-about-page .pk-facts strong{font-size:24px}
+.pk-about-page .pk-facts span{font-size:12px;color:var(--ink-2)}
+.pk-about-page .pk-page-note{margin-top:22px;color:var(--ink-2)}
+@media (min-width:720px){.pk-about-page .pk-facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1200px){.pk-about-page .pk-facts{grid-template-columns:repeat(4,minmax(0,1fr))}}
+/* /user/：与 /say/ 卡片流同版式（宽容器 1180 左对齐 + 22px 标题 + 1/2/3 列）。
+   另起一组选择器，不动 .pk-cats-page / .pk-links-page / .pk-about-page 那几行（各有精确正则断言）。 */
+.pk-user-page.user-wrap{padding-top:0;padding-bottom:64px}
+.pk-user-page .user-inner{max-width:1180px;margin:0}
+.pk-user-page .pk-page-head{padding:34px 0 4px;margin-bottom:0}
+.pk-user-page .pk-page-title{font-size:22px;font-weight:600;line-height:1.4;letter-spacing:.06em}
+.pk-user-page .pk-page-sub{margin-top:8px;font-size:13px;line-height:1.7;color:var(--ink-2)}
+/* 资料头 / 统计 / 评论统一成 1px 细线 + 12px 圆角卡片，与 .say-card 同一套骨架 */
+.pk-user-page .user-profile{margin-top:22px}
+.pk-user-page .user-head{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.pk-user-page .user-name{font-size:18px;letter-spacing:.04em}
+.pk-user-page .user-stats{margin-top:14px;padding:16px 20px;gap:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.pk-user-page .user-stat{flex:1 1 0;min-width:0}
+.pk-user-page .user-settings-btn{margin:14px 0 22px}
+.pk-user-page .user-tabs{margin:0 0 22px}
+/* 评论 tab 也走 1/2/3 列卡片流；点赞 tab 的 .pk-user-cards 自带同款网格，不重复设 */
+.pk-user-page .user-list--comment{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:22px}
+.pk-user-page .user-list--comment .user-empty{grid-column:1/-1;padding:36px 0;color:var(--ink-2)}
+.pk-user-page .user-comment{padding:16px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.pk-user-page .auth-page{margin:22px 0 0;max-width:420px}
+@media (min-width:720px){.pk-user-page .user-list--comment{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1200px){.pk-user-page .user-list--comment{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* 页面正文沿用文章排版，但去掉 .prose 自带的上分割线（标题区已经把它们分开） */
+.pk-page-body.prose{margin-top:20px;padding-top:0;border-top:0}
+/* 隐私政策 / 用户协议：正文末尾的更新日期，细线与小字弱化处理 */
+.pk-legal-updated{margin:26px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:12px;line-height:1.6;color:var(--ink-3)}
+.pk-page-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  height:36px;padding:0 17px;
+  background:var(--ink);color:var(--bg);
+  border:0;border-radius:999px;
+  font-size:13px;line-height:1;letter-spacing:.01em;
+  transition:opacity .2s var(--ease);
+}
+.pk-page-btn:hover,.pk-page-btn:focus-visible{opacity:.82}
+/* a 形态按钮：压过 body.pk-body a{color:inherit}，否则黑底黑字 */
+body.pk-body a.pk-page-btn{color:var(--bg);text-decoration:none}
+
+/* ---- 归档 ---- */
+.pk-arch{margin-top:18px}
+.pk-arch-year+.pk-arch-year{margin-top:30px}
+.pk-arch-y{
+  display:flex;align-items:baseline;gap:9px;margin:0 0 4px;
+  font-size:15px;font-weight:600;letter-spacing:.02em;color:var(--ink);
+}
+.pk-arch-count{font-size:12px;font-weight:400;color:var(--ink-3)}
+.pk-arch-list{list-style:none;margin:0;padding:0}
+.pk-arch-item{
+  display:flex;align-items:baseline;gap:12px;
+  padding:9px 0;border-bottom:1px solid var(--line);
+  font-size:14px;color:var(--ink);
+}
+.pk-arch-date{flex:0 0 40px;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.pk-arch-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .2s}
+.pk-arch-cat{flex:0 0 auto;font-size:12px;color:var(--ink-3)}
+.pk-arch-item:hover .pk-arch-title,.pk-arch-item:focus-visible .pk-arch-title{color:var(--ink-2)}
+.pk-arch-item:hover .pk-arch-date{color:var(--ink-2)}
+
+/* ---- 关于：统计条 ---- */
+.pk-facts{
+  list-style:none;display:grid;grid-template-columns:repeat(2,1fr);gap:16px 12px;
+  margin:34px 0 0;padding:22px 0;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+.pk-facts li{display:flex;flex-direction:column;gap:3px}
+.pk-facts strong{font-size:20px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.pk-facts span{font-size:12px;color:var(--ink-3)}
+.pk-page-note{margin:22px 0 0;font-size:13px;line-height:1.8;color:var(--ink-3)}
+.pk-page-note a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+
+/* ---- 联系 ---- */
+.pk-contact{
+  display:flex;flex-direction:column;align-items:flex-start;
+  margin-top:18px;padding:22px;
+  background:var(--soft);border-radius:var(--radius);
+}
+.pk-contact-label{font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--ink-3)}
+.pk-contact-mail{margin-top:6px;font-size:18px;color:var(--ink);word-break:break-all;transition:opacity .2s}
+.pk-contact-mail:hover{opacity:.72}
+.pk-contact .pk-page-btn{margin-top:16px}
+.pk-pairs{list-style:none;margin:26px 0 0;padding:0}
+.pk-pairs li{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-top:1px solid var(--line)}
+.pk-pairs-k{font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--ink-3)}
+.pk-pairs-v{font-size:14px;line-height:1.7;color:var(--ink-2)}
+a.pk-pairs-v{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+
+/* ---- 友情链接（0.13.27：与 /say/ 卡片流同款） ----
+   卡片复用 .say-card 的白底 / 12px 圆角 / 细线 / 无阴影无渐变；
+   这里只补网格、站点首字头像、右上入口与状态行。 */
+.pk-links{list-style:none;margin:22px 0 0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:stretch}
+.pk-links > li{min-width:0;list-style:none}
+.pk-links-group-row{grid-column:1/-1}
+.pk-links-group{display:flex;align-items:center;gap:8px;margin:8px 0 0;font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--ink-2)}
+.pk-links-group-dot{width:5px;height:5px;border-radius:50%;background:var(--ink)}
+.pk-links-group-count{margin-left:auto;font-size:11px;font-weight:400;color:var(--ink-3);letter-spacing:0}
+.pk-link-card{cursor:pointer;transition:border-color .2s var(--ease)}
+.pk-link-card:hover,.pk-link-card:focus-visible,.pk-link-card:focus-within{border-color:var(--ink-3)}
+.pk-link-card.is-offline{opacity:.5;cursor:default}
+.pk-link-card.is-offline:hover,.pk-link-card.is-offline:focus-visible{border-color:var(--line)}
+.pk-link-avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:var(--line);color:var(--ink-2);font-size:15px;font-weight:600}
+.pk-link-host{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-link-card .pk-link-go{display:inline-flex;align-items:center;justify-content:center;flex:none;width:30px;height:30px;margin-left:auto;border:1px solid var(--line);border-radius:50%;color:var(--ink-2);transition:border-color .2s,color .2s}
+.pk-link-card:hover .pk-link-go,.pk-link-card:focus-visible .pk-link-go{border-color:var(--ink);color:var(--ink)}
+.pk-link-state{margin-left:auto;flex:0 0 auto;width:6px;height:6px;border:1px solid var(--ink-3);border-radius:50%}
+.pk-link-state.is-online{background:var(--ink);border-color:var(--ink)}
+.pk-link-state-text{font-size:11px;color:var(--ink-3)}
+.pk-apply{margin-top:34px;padding-top:24px;border-top:1px solid var(--line)}
+.pk-apply-title{margin:0 0 10px;font-size:15px;font-weight:600}
+.pk-apply-list{list-style:none;margin:0;padding:0}
+.pk-apply-list li{position:relative;padding:4px 0 4px 14px;font-size:13px;line-height:1.75;color:var(--ink-2)}
+.pk-apply-list li::before{
+  content:'';position:absolute;left:0;top:.95em;
+  width:3px;height:3px;border-radius:50%;background:var(--ink-3);
+}
+.pk-apply .pk-page-btn{margin-top:16px}
+
+/* ---- 友情链接：分类筛选 + 申请表单 ----
+   只新增选择器，不动上面 .pk-cats-page / .pk-links-page / .pk-about-page 的 scoped 断言行。 */
+.pk-links-filter{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;padding:0}
+.pk-links-chip{
+  appearance:none;-webkit-appearance:none;
+  display:inline-flex;align-items:center;gap:7px;
+  height:30px;padding:0 12px;
+  border:1px solid var(--line);border-radius:999px;
+  background:var(--bg);color:var(--ink-2);
+  font-family:inherit;font-size:12px;line-height:1;cursor:pointer;
+  transition:border-color .2s var(--ease),color .2s var(--ease),background-color .2s var(--ease);
+}
+.pk-links-chip span{font-size:11px;color:var(--ink-3)}
+.pk-links-chip:hover,.pk-links-chip:focus-visible{border-color:var(--ink);color:var(--ink)}
+.pk-links-chip.is-active{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.pk-links-chip.is-active span{color:var(--bg);opacity:.7}
+.pk-links > li[hidden]{display:none}
+.pk-apply-form{margin-top:18px}
+/* 蜜罐：移出视口，不占布局；不要用 display:none 以免部分自动填充跳过 */
+.pk-apply-hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}
+.pk-apply-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;max-width:720px}
+@media (min-width:720px){.pk-apply-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pk-apply-field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.pk-apply-field--wide{grid-column:1/-1}
+.pk-apply-field > span{font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--ink-2)}
+.pk-apply-field > span b{color:var(--ink);font-weight:600}
+.pk-apply-field input,.pk-apply-field select{
+  appearance:none;-webkit-appearance:none;
+  width:100%;height:38px;padding:0 12px;
+  border:1px solid var(--line);border-radius:var(--radius);
+  background-color:var(--bg);color:var(--ink);
+  font-family:inherit;font-size:13px;line-height:1;
+  transition:border-color .2s var(--ease);
+}
+.pk-apply-field select{
+  padding-right:32px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+}
+.pk-apply-field input:focus,.pk-apply-field select:focus{outline:2px solid var(--ink);outline-offset:1px;border-color:var(--ink)}
+.pk-apply-field input::placeholder{color:var(--ink-3)}
+.pk-apply-foot{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:18px}
+.pk-apply .pk-apply-submit{margin-top:0;appearance:none;-webkit-appearance:none;border:0;font-family:inherit;cursor:pointer}
+.pk-apply-submit[disabled]{opacity:.5;cursor:default}
+.pk-apply-msg{font-size:12px;line-height:1.6;color:var(--ink-3)}
+.pk-apply-msg.is-ok{color:var(--ink);font-weight:600}
+.pk-apply-msg.is-err{color:var(--ink-2)}
+
+@media (min-width:768px){
+  .pk-page-wrap{padding-top:34px}
+  .pk-page-title{font-size:30px}
+  .pk-facts{grid-template-columns:repeat(4,1fr)}
+  .pk-pairs li{flex-direction:row;align-items:baseline;gap:18px}
+  .pk-pairs-k{flex:0 0 80px;padding-top:1px}
+}
+
+/* ============================================================
+   全站页面统一版式：与 /say/ 卡片流同宽（1180 左对齐）、
+   22px 标题 + 13px 描述 + 34px 头部上距、64px 底部留白。
+   放在 ≥768px 媒体查询之后，压掉它把标题改回 30px / padding-top:34px 的旧规则；
+   .pk-cats-page / .pk-links-page / .pk-about-page 各带精确正则断言，值一致且不变。
+   ============================================================ */
+.pk-page-wide.pk-page-wrap{padding-top:0;padding-bottom:64px}
+.pk-page-wide .pk-page-inner{max-width:1180px;margin:0}
+.pk-page-wide .pk-page-head{padding:34px 0 4px;margin-bottom:0}
+.pk-page-wide .pk-page-title{font-size:22px;font-weight:600;line-height:1.4;letter-spacing:.06em}
+.pk-page-wide .pk-page-sub{margin-top:8px;font-size:13px;line-height:1.7;color:var(--ink-2)}
+/* 内容统一 22px 上距；长文正文保持 720px 可读行宽，画展 / 区块展厅铺满 */
+.pk-page-wide .pk-arch,
+.pk-page-wide .pk-contact,
+.pk-page-wide .pk-pairs,
+.pk-page-wide .pk-kit,
+.pk-page-wide .pk-help,
+.pk-page-wide .pk-apply,
+.pk-page-wide .pk-page-empty,
+.pk-page-wide .pk-page-body.prose{max-width:720px}
+/* 隐私政策 / 用户协议：长文页整页居中，避免 1180px 容器里只有左侧 720px 有字、右边一大片空 */
+.pk-legal-page .pk-page-inner{max-width:720px;margin:0 auto}
+/* 登录页：同一外壳，卡片左对齐（与 /user/ 游客态一致） */
+.pk-page-wide.auth-wrap{padding-top:0;padding-bottom:64px}
+.pk-page-wide .auth-page{margin:22px 0 0}
+
+/* ============================================================
+   排版标签页：一行一条，左「写法」/ 右「效果」；示例区就是 .prose 真实渲染
+   ============================================================ */
+.pk-tag{margin-top:22px}
+.pk-tag-intro{margin:0 0 18px;max-width:720px;font-size:13.5px;line-height:1.9;color:var(--ink-2)}
+.pk-tag-index{display:flex;flex-wrap:wrap;gap:8px 18px;padding:0 0 18px;border-bottom:1px solid var(--line);font-size:12px;letter-spacing:.06em}
+.pk-tag-index-link{color:var(--ink-2);text-decoration:none;transition:color .2s}
+.pk-tag-index-link:hover,.pk-tag-index-link:focus-visible{color:var(--ink)}
+/* <a> 形态链接：压过 body.pk-body a{color:inherit} */
+body.pk-body a.pk-tag-index-link{color:var(--ink-2);text-decoration:none}
+body.pk-body a.pk-tag-index-link:hover,body.pk-body a.pk-tag-index-link:focus-visible{color:var(--ink)}
+.pk-tag-group{margin-top:34px;scroll-margin-top:84px}
+.pk-tag-group-head{display:flex;align-items:baseline;gap:12px}
+.pk-tag-group-head h2{margin:0;font-size:18px;font-weight:600;letter-spacing:.04em}
+.pk-tag-group-head span{font-size:11px;letter-spacing:.1em;color:var(--ink-3)}
+.pk-tag-group-desc{margin:6px 0 14px;font-size:12.5px;line-height:1.8;color:var(--ink-2)}
+.pk-tag-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.pk-tag-row{display:flex;flex-direction:column;min-width:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden;transition:border-color .2s}
+.pk-tag-row:hover{border-color:var(--ink-3)}
+.pk-tag-meta{padding:16px 18px;border-bottom:1px solid var(--line)}
+.pk-tag-name{display:inline-block;padding:2px 8px;border:1px solid var(--line);border-radius:6px;background:var(--soft);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.7;color:var(--ink)}
+.pk-tag-desc{margin:9px 0 0;font-size:12.5px;line-height:1.8;color:var(--ink-2)}
+.pk-tag-src{margin:12px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--soft);overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.75;color:var(--ink-2);white-space:pre-wrap;word-break:break-word}
+.pk-tag-src code{font:inherit}
+.pk-tag-demo{padding:16px 18px;min-width:0;overflow-x:auto}
+/* 示例代码块沿用 .pk-code 自己的外观，别让 .prose pre 再叠一层边框 */
+.pk-tag-demo .pk-code pre{margin:0;border:0;background:none}
+/* 展厅卡片里不要 .prose 自带的上分割线与 22px 上距 */
+.pk-tag-demo.prose{margin:0;padding:16px 18px;border-top:0;font-size:14px;line-height:1.85;color:var(--ink)}
+.pk-tag-demo.prose> :first-child{margin-top:0}
+.pk-tag-demo.prose> :last-child{margin-bottom:0}
+.pk-tag-ph{display:flex;align-items:center;justify-content:center;height:96px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);font-size:11px;letter-spacing:.1em;color:var(--ink-3)}
+.pk-tag-more{margin-top:34px;padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;font-size:13px;color:var(--ink-2)}
+a.pk-tag-more-link{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border:1px solid var(--ink);border-radius:999px;background:var(--ink);color:var(--bg);font-size:12.5px;text-decoration:none;transition:opacity .2s}
+a.pk-tag-more-link:hover,a.pk-tag-more-link:focus-visible{opacity:.85}
+/* <a> 形态按钮：压过 body.pk-body a{color:inherit}，否则黑底黑字 */
+body.pk-body a.pk-tag-more-link{color:var(--bg);text-decoration:none}
+.pk-tag-more-link .pk-icon{width:14px;height:14px}
+@media (min-width:900px){
+  .pk-tag-row{flex-direction:row;align-items:stretch}
+  .pk-tag-meta{flex:0 0 38%;border-bottom:0;border-right:1px solid var(--line)}
+  .pk-tag-demo{flex:1 1 auto}
+}
+@media (max-width:600px){
+  .pk-tag-group{margin-top:28px}
+  .pk-tag-demo.prose{font-size:13.5px}
+}
+
+/* ============================================================
+   全站返回顶部：右下角常驻，滚动超过一屏淡入；手机抬到 dock 上方
+   z-index 65 —— 在 .overlay(56) / .site-head(60) 之上，
+   在 .pk-dock / .pk-sweep(70) / dialog(125) / .pk-toast(200) 之下。
+   ============================================================ */
+.pk-to-top{
+  position:fixed;right:24px;bottom:24px;z-index:65;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:42px;height:42px;padding:0;
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface);color:var(--ink);
+  cursor:pointer;
+  opacity:0;transform:translateY(10px);pointer-events:none;
+  transition:opacity .24s var(--ease),transform .24s var(--ease),border-color .2s var(--ease);
+}
+.pk-to-top.is-on{opacity:1;transform:none;pointer-events:auto}
+.pk-to-top:hover,.pk-to-top:focus-visible{border-color:var(--ink)}
+.pk-to-top .pk-icon{width:18px;height:18px}
+/* 手机底部居中是文章 dock，按钮上移让开 */
+@media (max-width:1023px){
+  .pk-to-top{right:16px;bottom:calc(84px + env(safe-area-inset-bottom))}
+}
+/* 手机抽屉推开时别浮在遮罩上方 */
+body.pk-aside-open .pk-to-top{opacity:0;pointer-events:none}
+/* 减少动态效果：不做位移，只淡入淡出 */
+@media (prefers-reduced-motion: reduce){
+  .pk-to-top{transform:none;transition:opacity .2s,border-color .2s}
+  .pk-to-top.is-on{transform:none}
+}
+
+/* ============================================================
+   0.13.0 · 区块展厅 / 友链分组 / 说说位置（顶部通知条 0.13.4 已移除）
+   ============================================================ */
+
+/* 区块展厅 */
+.pk-kit{display:flex;flex-direction:column;gap:14px}
+.pk-kit-demo{padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.pk-kit-head{display:flex;align-items:flex-start;gap:14px}
+.pk-kit-no{flex:none;padding:3px 8px;border:1px solid var(--line);border-radius:8px;font-size:11px;line-height:1.6;color:var(--ink-3);letter-spacing:.06em}
+.pk-kit-titles{min-width:0}
+.pk-kit-titles h2{margin:0;font-size:16px;font-weight:600;line-height:1.5}
+.pk-kit-titles p{margin:4px 0 0;font-size:12px;line-height:1.75;color:var(--ink-2)}
+.pk-kit-body{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.pk-kit-body > :first-child{margin-top:0}
+.pk-kit-body > :last-child{margin-bottom:0}
+.pk-kit-stack{display:grid;gap:10px}
+.pk-kit-stack .pk-tip{margin:0}
+.pk-kit-note{margin:14px 0 0!important;font-size:11px;letter-spacing:.08em;color:var(--ink-3)}
+.pk-kit-code{margin-top:14px}
+.pk-kit-code .pk-code{margin:0}
+.pk-kit-empty{padding:26px;border:1px dashed var(--line);border-radius:var(--radius);font-size:13px;color:var(--ink-3);text-align:center}
+.pk-kit-list{list-style:none;margin:0;padding:0}
+.pk-kit-list li{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.pk-kit-list li:last-child{border-bottom:0}
+.pk-kit-list li span:last-child{font-size:11px;color:var(--ink-3);text-align:right}
+.pk-kit-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pk-kit-links a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border:1px solid var(--line);border-radius:var(--radius);font-size:13px;color:var(--ink);text-decoration:none}
+.pk-kit-links a:hover{border-color:var(--ink-2)}
+@media (max-width:600px){
+  .pk-kit-demo{padding:14px}
+  .pk-kit-links{grid-template-columns:1fr}
+  .pk-kit-list li{flex-direction:column;gap:2px}
+  .pk-kit-list li span:last-child{text-align:left}
+}
+@media (min-width:768px){.pk-kit-demo{padding:22px 24px}}
+
+/* 0.13.27 友情链接弹窗：第一次点卡片看详情，第二次点弹窗卡片 / 按钮才访问。
+   动效只用 opacity + transform，遵守全站约定。 */
+.pk-link-dialog{width:min(440px,calc(100vw - 32px));max-width:none;max-height:calc(100vh - 32px);padding:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);color:var(--ink)}
+.pk-link-dialog::backdrop{background:rgba(0,0,0,.42)}
+.pk-link-dialog-inner{padding:18px}
+.pk-link-dialog-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.pk-link-dialog-label{font-size:11px;letter-spacing:.12em;color:var(--ink-3)}
+.pk-link-dialog-close{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--ink-2);cursor:pointer;transition:border-color .2s,color .2s}
+.pk-link-dialog-close:hover,.pk-link-dialog-close:focus-visible{border-color:var(--ink);color:var(--ink)}
+.pk-link-dialog-card{display:flex;height:auto;text-decoration:none;color:inherit;padding:20px 22px}
+.pk-link-dialog-card .pk-link-go{display:inline-flex;align-items:center;justify-content:center;flex:none;width:30px;height:30px;margin-left:auto;border:1px solid var(--line);border-radius:50%;color:var(--ink-2);transition:border-color .2s,color .2s}
+.pk-link-dialog-card:hover .pk-link-go{border-color:var(--ink);color:var(--ink)}
+.pk-link-dialog-card .say-avatar,.pk-link-dialog-card .say-avatar .user-avatar{width:46px;height:46px;font-size:17px}
+.pk-link-dialog-card .say-name{font-size:16px;color:var(--ink)}
+.pk-link-dialog-card .say-time{font-size:12px}
+.pk-link-dialog-card .say-content{margin-top:16px;font-size:15px;line-height:1.9;color:var(--ink)}
+.pk-link-dialog-card .say-foot{margin-top:16px;padding-top:12px}
+.pk-link-dialog-dot{margin-left:auto;flex:0 0 auto;width:6px;height:6px;border-radius:50%;background:var(--ink)}
+.pk-link-dialog-foot{display:flex;align-items:center;gap:10px;margin-top:16px}
+.pk-link-visit{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.pk-link-cancel{flex:0 0 auto;padding:0 16px;height:40px;border:1px solid var(--line);border-radius:var(--radius);background:transparent;color:var(--ink-2);font-size:13px;cursor:pointer;transition:border-color .2s,color .2s}
+.pk-link-cancel:hover,.pk-link-cancel:focus-visible{border-color:var(--ink);color:var(--ink)}
+.pk-link-dialog[open]{animation:pk-link-in .18s ease-out}
+@keyframes pk-link-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* 说说卡片（含位置标签）样式统一放在上方「说说：卡片流」区块 */
+
+/* ============================================================
+   帮助中心：左侧 sticky 目录 + 右侧分组问答，手机退成横向胶囊
+   ============================================================ */
+.pk-help{display:grid;grid-template-columns:1fr;gap:26px;padding-bottom:44px}
+.pk-help [hidden]{display:none!important}
+.pk-help-side-label{margin:0;font-size:11px;letter-spacing:.12em;color:var(--ink-3)}
+.pk-help-toc{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.pk-help-toc-link{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--ink-2);text-decoration:none;transition:border-color .2s,color .2s}
+.pk-help-toc-link span{font-size:10px;letter-spacing:.08em;color:var(--ink-3)}
+.pk-help-toc-link:hover,.pk-help-toc-link.is-active{border-color:var(--ink);color:var(--ink)}
+.pk-help-tools{display:flex;gap:10px;align-items:center;margin-bottom:16px}
+.pk-help-search{display:flex;flex:1;align-items:center;gap:9px;min-width:0;height:44px;padding:0 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.pk-help-search:focus-within{border-color:var(--ink)}
+.pk-help-search-ico{display:inline-flex;flex:none;color:var(--ink-3)}
+.pk-help-search-ico .pk-icon{width:17px;height:17px}
+.pk-help-search input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:13px;color:var(--ink)}
+.pk-help-search input::placeholder{color:var(--ink-3)}
+.pk-help-toggle{flex:none;height:44px;padding:0 16px;border:1px solid var(--ink);border-radius:var(--radius);background:var(--ink);color:var(--bg);font-family:inherit;font-size:12px;cursor:pointer}
+.pk-help-hits{margin:0 0 16px;font-size:12px;color:var(--ink-3)}
+.pk-help-sec{scroll-margin-top:24px;margin-bottom:34px}
+.pk-help-sec-head{display:flex;align-items:center;gap:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.pk-help-num{flex:none;font-size:12px;letter-spacing:.1em;color:var(--ink-3)}
+.pk-help-sec-head h2{margin:0;font-size:20px;font-weight:600;letter-spacing:-.01em}
+.pk-help-sec-head p{margin:4px 0 0;font-size:12px;line-height:1.6;color:var(--ink-3)}
+.pk-help-sec-count{margin-left:auto;flex:none;font-size:11px;color:var(--ink-3)}
+.pk-help-items{margin-top:4px}
+.pk-help-item{border-bottom:1px solid var(--line)}
+.pk-help-item summary{display:flex;align-items:center;gap:12px;padding:15px 2px;cursor:pointer;list-style:none}
+.pk-help-item summary::-webkit-details-marker{display:none}
+.pk-help-item-t{flex:none;font-size:14px;font-weight:600;color:var(--ink)}
+.pk-help-item-d{flex:1;min-width:0;font-size:12px;color:var(--ink-3);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-help-caret{display:inline-flex;flex:none;color:var(--ink-3);transition:transform .2s var(--ease)}
+.pk-help-caret .pk-icon{width:16px;height:16px}
+.pk-help-item[open] .pk-help-caret{transform:rotate(180deg)}
+.pk-help-answer{padding:0 2px 18px;font-size:13px;line-height:1.85;color:var(--ink-2)}
+.pk-help-answer p{margin:0 0 10px}
+.pk-help-answer p:last-child{margin-bottom:0}
+.pk-help-answer code{padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:var(--soft);font-size:12px;color:var(--ink)}
+.pk-help-answer a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.pk-help-answer strong{color:var(--ink)}
+.pk-help-credit{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.pk-help-credit-n{flex:none;font-size:13px;font-weight:600;color:var(--ink)}
+.pk-help-credit-l{flex:none;padding:2px 7px;border:1px solid var(--line);border-radius:999px;font-size:10px;letter-spacing:.04em;color:var(--ink-2)}
+.pk-help-credit-d{flex:1 1 100%;font-size:12px;color:var(--ink-3)}
+.pk-help-contact{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+.pk-help-contact a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);font-size:13px;color:var(--ink);text-decoration:none}
+.pk-help-contact a:hover{border-color:var(--ink-2)}
+.pk-help-contact .pk-icon{width:16px;height:16px;color:var(--ink-3)}
+.pk-help-empty{padding:28px;border:1px dashed var(--line);border-radius:var(--radius);text-align:center;font-size:13px;color:var(--ink-3)}
+@media (max-width:600px){
+  .pk-help-item-d{display:none}
+  .pk-help-contact{grid-template-columns:1fr}
+  .pk-help-sec-head h2{font-size:18px}
+}
+@media (min-width:900px){
+  .pk-help{grid-template-columns:190px minmax(0,1fr);gap:38px}
+  .pk-help-side{position:sticky;top:20px;align-self:start}
+  .pk-help-toc{flex-direction:column;flex-wrap:nowrap;gap:2px}
+  .pk-help-toc-link{border:0;border-left:2px solid var(--line);border-radius:0;padding:9px 12px}
+  .pk-help-toc-link:hover,.pk-help-toc-link.is-active{border-color:var(--ink)}
+  .pk-help-item-d{text-align:left}
+}
+
+/* ============================================================
+   0.13.22 阅读解锁：白底 / 黑按钮 / 12px 圆角 / 线性图标，无渐变无阴影
+   四种方式（点赞 / 评论 / 密码 / 入群）默认全部开启，任选其一
+   ============================================================ */
+.pk-unlock{border:1px solid var(--line);border-radius:var(--radius);padding:22px;background:var(--bg);margin:18px 0}
+.pk-unlock--compact{padding:18px}
+.pk-unlock-teaser{margin-bottom:16px;font-size:14px;line-height:1.75;color:var(--ink-2)}
+.pk-unlock-teaser p{margin:0 0 8px}
+.pk-unlock-teaser p:last-child{margin-bottom:0}
+.pk-unlock-head{display:flex;align-items:flex-start;gap:12px}
+.pk-unlock-badge{flex:none;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:10px;color:var(--ink)}
+.pk-unlock-ico{display:block;width:18px;height:18px}
+.pk-unlock-titles{display:flex;flex-direction:column;gap:4px;min-width:0}
+.pk-unlock-title{font-size:15px;font-weight:600;color:var(--ink);line-height:1.4}
+.pk-unlock-sub{font-size:12px;line-height:1.6;color:var(--ink-3)}
+.pk-unlock-hint{margin:12px 0 0;font-size:13px;line-height:1.7;color:var(--ink-2)}
+.pk-unlock-ways{display:grid;gap:10px;margin:18px 0 0}
+.pk-unlock-way{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius)}
+.pk-unlock-way-ico{flex:none;width:32px;height:32px;margin-top:1px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:10px;color:var(--ink)}
+.pk-unlock-way-ico .pk-unlock-ico{width:17px;height:17px}
+.pk-unlock-way-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pk-unlock-way-t{font-size:13px;font-weight:600;line-height:1.4;color:var(--ink)}
+.pk-unlock-way-d{font-size:12px;line-height:1.55;color:var(--ink-3)}
+.pk-unlock-way-btn{flex:none;align-self:center;display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:12px;font-weight:500;text-decoration:none;transition:border-color .2s,color .2s}
+.pk-unlock-way-btn:hover{border-color:var(--ink-2)}
+/* 四选一后卡片里只剩一个主操作，黑底白字更明确；body.pk-body a 会盖颜色，必须提权 */
+.pk-unlock-way-btn--primary{background:var(--ink);border-color:var(--ink);color:var(--bg)!important}
+.pk-unlock-way-btn--primary:hover{border-color:var(--ink);color:var(--bg)!important;opacity:.86}
+.pk-unlock-way-btn[data-pk-unlock-busy="1"]{opacity:.55}
+.pk-unlock-pass-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.pk-unlock-pass-input{flex:1 1 140px;min-width:0;max-width:220px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:12px;line-height:1.5;font-family:inherit}
+.pk-unlock-pass-input:focus{outline:none;border-color:var(--ink)}
+.pk-unlock-pass-input::placeholder{color:var(--ink-3)}
+.pk-unlock-code{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;margin-top:8px}
+.pk-unlock-code-label{font-size:12px;color:var(--ink-3)}
+.pk-unlock-code-val{flex:1 1 auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;font-weight:600;letter-spacing:.12em;color:var(--ink)}
+.pk-unlock-copy{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-2);text-decoration:none;padding:5px 9px;border:1px solid var(--line);border-radius:8px;transition:color .2s,border-color .2s}
+.pk-unlock-copy:hover{color:var(--ink);border-color:var(--ink-2)}
+.pk-unlock-copy .pk-unlock-ico{width:14px;height:14px}
+.pk-unlock-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.pk-unlock-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:7px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:12px;font-weight:500;text-decoration:none;transition:border-color .2s,color .2s}
+.pk-unlock-btn:hover{border-color:var(--ink-2)}
+/* body.pk-body a{color:inherit} 会把主按钮的白字盖成黑字，必须提权 */
+.pk-unlock-btn--primary{background:var(--ink);border-color:var(--ink);color:var(--bg)!important}
+.pk-unlock-btn--primary:hover{border-color:var(--ink);color:var(--bg)!important;opacity:.86}
+.pk-unlock-btn .pk-unlock-ico{width:15px;height:15px}
+.pk-unlock-note{margin:14px 0 0;font-size:12px;line-height:1.6;color:var(--ink-3)}
+.pk-unlock[data-pk-unlock-reason="left"] .pk-unlock-note,
+.pk-unlock[data-pk-unlock-reason="expired"] .pk-unlock-note{color:var(--ink)}
+.pk-unlock-pass{margin:0}
+/* 0.13.24 已解锁内容：细线外框 + 顶部标签，下面才是真正解锁的正文 */
+.pk-unlock-open{margin:18px 0;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.pk-unlock-open-head{display:flex;align-items:center;gap:9px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.pk-unlock-open-badge{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg)}
+.pk-unlock-open-badge .pk-unlock-ico{width:13px;height:13px}
+.pk-unlock-open-title{font-size:12.5px;font-weight:600;line-height:1.4;letter-spacing:.01em;color:var(--ink)}
+.pk-unlock-open-way{margin-left:auto;font-size:11.5px;line-height:1.4;color:var(--ink-3)}
+.pk-unlock-open-body{padding:14px 16px}
+.pk-unlock-open-body>*:first-child{margin-top:0}
+.pk-unlock-open-body>*:last-child{margin-bottom:0}
+@media (max-width:600px){
+  .pk-unlock{padding:18px 16px}
+  .pk-unlock-way{flex-wrap:wrap;align-items:flex-start}
+  .pk-unlock-way-btn{width:100%}
+  .pk-unlock-pass-row{width:100%}
+  .pk-unlock-pass-input{max-width:none;flex:1 1 120px}
+  .pk-unlock-pass-row .pk-unlock-way-btn{flex:0 0 auto;width:auto}
+  .pk-unlock-code-val{font-size:14px;letter-spacing:.08em}
+  .pk-unlock-actions{flex-direction:column}
+  .pk-unlock-btn{width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  .pk-unlock-btn,.pk-unlock-copy,.pk-unlock-way-btn{transition:none}
+}
