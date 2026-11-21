@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "bang/download",
+  "version": "0.13.32",
+  "title": "下载",
+  "category": "bang-blocks",
+  "icon": "download",
+  "description": "网盘 / 直链下载列表，每行一个「名称|链接|提取码」。支持与阅读解锁相同的五选一解锁方式（登录 / 点赞 / 回复 / 密码 / 点赞+评论叠加），未解锁时服务端不输出下载地址。",
+  "keywords": ["下载", "网盘", "直链", "提取码", "download"],
+  "textdomain": "bang",
+  "supports": {
+    "align": false,
+    "anchor": true,
+    "className": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "desc": {
+      "type": "string",
+      "default": ""
+    },
+    "teaser": {
+      "type": "string",
+      "default": ""
+    },
+    "items": {
+      "type": "string",
+      "default": ""
+    },
+    "method": {
+      "type": "string",
+      "default": "login",
+      "enum": ["login", "like", "comment", "password", "combo"]
+    },
+    "password": {
+      "type": "string",
+      "default": ""
+    },
+    "locked": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "example": {
+    "attributes": {
+      "title": "资源下载",
+      "method": "login",
+      "items": "百度网盘|https://pan.baidu.com/s/xxxx|abcd\n直链下载|https://example.com/file.zip"
+    }
+  }
+}

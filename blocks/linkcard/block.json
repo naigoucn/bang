@@ -1,14 +1,14 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "pianke/linkcard",
+  "name": "bang/linkcard",
   "version": "0.10.1",
   "title": "链接卡",
-  "category": "pianke-blocks",
+  "category": "bang-blocks",
   "icon": "admin-links",
   "description": "一张站点卡片，外链经中转确认页在新标签打开。",
   "keywords": ["链接", "站点", "link"],
-  "textdomain": "pianke",
+  "textdomain": "bang",
   "supports": {
     "align": false,
     "anchor": true,

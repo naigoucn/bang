@@ -19,11 +19,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return bool
  */
-function pk_smtp_enabled() {
-	if ( ! pk_opt( 'smtp_on' ) ) {
+function bang_smtp_enabled() {
+	if ( ! bang_opt( 'smtp_on' ) ) {
 		return false;
 	}
-	return '' !== trim( (string) pk_opt( 'smtp_host' ) );
+	return '' !== trim( (string) bang_opt( 'smtp_host' ) );
 }
 
 /**
@@ -31,20 +31,24 @@ function pk_smtp_enabled() {
  *
  * @param PHPMailer\PHPMailer\PHPMailer $phpmailer 实例。
  */
-function pk_smtp_configure( $phpmailer ) {
-	$host = trim( (string) pk_opt( 'smtp_host' ) );
+function bang_smtp_configure( $phpmailer ) {
+	/* 开关关闭时完全不碰 PHPMailer：即使之前存过主机配置也走 WP 默认发信 */
+	if ( ! bang_smtp_enabled() ) {
+		return;
+	}
+	$host = trim( (string) bang_opt( 'smtp_host' ) );
 	if ( '' === $host ) {
 		return;
 	}
-	$port = (int) pk_opt( 'smtp_port' );
+	$port = (int) bang_opt( 'smtp_port' );
 	if ( $port < 1 || $port > 65535 ) {
 		$port = 465;
 	}
-	$enc  = (string) pk_opt( 'smtp_encryption' );
-	$user = trim( (string) pk_opt( 'smtp_user' ) );
-	$pass = (string) pk_opt( 'smtp_pass' );
-	$from = trim( (string) pk_opt( 'smtp_from' ) );
-	$name = trim( (string) pk_opt( 'smtp_from_name' ) );
+	$enc  = (string) bang_opt( 'smtp_encryption' );
+	$user = trim( (string) bang_opt( 'smtp_user' ) );
+	$pass = (string) bang_opt( 'smtp_pass' );
+	$from = trim( (string) bang_opt( 'smtp_from' ) );
+	$name = trim( (string) bang_opt( 'smtp_from_name' ) );
 
 	$phpmailer->isSMTP();
 	$phpmailer->Host       = $host;
@@ -64,24 +68,26 @@ function pk_smtp_configure( $phpmailer ) {
 		$phpmailer->FromName = $name;
 	}
 }
-add_action( 'phpmailer_init', 'pk_smtp_configure' );
+add_action( 'phpmailer_init', 'bang_smtp_configure' );
 
 /**
  * 后台「测试发送」：用当前保存的配置发一封信给自己，直接回传成败与错误信息。
  * nonce + manage_options 双重校验，管理员之外一律拒绝。
  * 收件地址取后台「测试收件地址」，留空回退管理员邮箱（测试地址单独存，
- * 不写进 pk_options，避免污染设置表单的清洗流程）。
+ * 不写进 bang_options，避免污染设置表单的清洗流程）。
  */
-function pk_smtp_test() {
+function bang_smtp_test() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		wp_send_json_error( '没有权限。' );
 	}
-	check_ajax_referer( 'pk_ajax', 'nonce' );
+	check_ajax_referer( 'bang_ajax', 'nonce' );
 
-	if ( ! pk_smtp_enabled() ) {
+	if ( ! bang_smtp_enabled() ) {
 		wp_send_json_error( '先打开「启用 SMTP 发信」并填写主机，再点测试。' );
 	}
-	$to = trim( (string) pk_opt( 'smtp_test_to' ) );
+	/* 优先用测试框当场填的地址（nonce 已在上方校验），没填才回退已保存值 */
+	$posted = isset( $_POST['to'] ) ? trim( (string) wp_unslash( $_POST['to'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+	$to     = is_email( $posted ) ? sanitize_email( $posted ) : trim( (string) bang_opt( 'smtp_test_to' ) );
 	if ( ! is_email( $to ) ) {
 		$to = sanitize_email( (string) get_option( 'admin_email' ) );
 	}
@@ -113,44 +119,44 @@ function pk_smtp_test() {
 	}
 	wp_send_json_error( '发送失败：' . ( '' !== $err ? $err : '服务器拒绝了这次连接，请检查主机 / 端口 / 加密方式 / 授权码。' ) );
 }
-add_action( 'wp_ajax_pk_smtp_test', 'pk_smtp_test' );
+add_action( 'wp_ajax_bang_smtp_test', 'bang_smtp_test' );
 
 /**
  * 后台「邮件」tab 底部的接线说明 + 测试发送（只读 + 一个按钮，不参与保存）。
  * 按钮读表单里的「测试收件地址」，保存设置后再点测试即可生效。
  */
-function pk_smtp_panel() {
-	$on    = pk_smtp_enabled();
-	$host  = trim( (string) pk_opt( 'smtp_host' ) );
-	$port  = (int) pk_opt( 'smtp_port' );
-	$enc   = (string) pk_opt( 'smtp_encryption' );
-	$user  = trim( (string) pk_opt( 'smtp_user' ) );
-	$enct  = 'starttls' === $enc ? 'STARTTLS' : ( ( 'none' === $enc ) ? __( '不加密', 'pianke' ) : 'SSL / TLS' );
+function bang_smtp_panel() {
+	$on    = bang_smtp_enabled();
+	$host  = trim( (string) bang_opt( 'smtp_host' ) );
+	$port  = (int) bang_opt( 'smtp_port' );
+	$enc   = (string) bang_opt( 'smtp_encryption' );
+	$user  = trim( (string) bang_opt( 'smtp_user' ) );
+	$enct  = 'starttls' === $enc ? 'STARTTLS' : ( ( 'none' === $enc ) ? __( '不加密', 'bang' ) : 'SSL / TLS' );
 	$statu = $on
-		? sprintf( __( '当前生效：SMTP %s:%d（%s），登录账号 %s。站内所有 wp_mail 都走它。', 'pianke' ), $host, $port, $enct, $user ? $user : '—' )
-		: __( '当前生效：WordPress 默认发信（未启用 SMTP）。打开上面的开关并填好主机后才会接管。', 'pianke' );
+		? sprintf( __( '当前生效：SMTP %s:%d（%s），登录账号 %s。站内所有 wp_mail 都走它。', 'bang' ), $host, $port, $enct, $user ? $user : '—' )
+		: __( '当前生效：WordPress 默认发信（未启用 SMTP）。打开上面的开关并填好主机后才会接管。', 'bang' );
 
-	$nonce = wp_create_nonce( 'pk_ajax' );
+	$nonce = wp_create_nonce( 'bang_ajax' );
 
-	return '<div class="pk-smtp-panel">'
-		. '<h3>' . esc_html__( '接线说明', 'pianke' ) . '</h3>'
-		. '<p class="pk-f-d">' . esc_html( $statu ) . '</p>'
-		. '<p class="pk-f-d">' . esc_html__( '端口与加密方式要成对：SSL 用 465，STARTTLS 用 587，不加密用 25。多数国内邮箱 / 企业邮箱要求在服务商后台先开通 SMTP 并生成「授权码」，把授权码填进「密码 / 授权码」。', 'pianke' ) . '</p>'
-		. '<p class="pk-f-d">' . esc_html__( '测试只发一封信，成功与否会立刻显示；失败信息里带有服务器返回的原因，按它调整配置即可。改了配置先点「保存设置」，再点测试。', 'pianke' ) . '</p>'
-		. '<p class="pk-smtp-actions">'
-		. '<button type="button" class="button is-primary" id="pk-smtp-test-btn"' . ( $on ? '' : ' disabled' ) . '>'
-		. esc_html__( '发送测试邮件', 'pianke' ) . '</button>'
-		. '<span class="pk-smtp-msg" id="pk-smtp-test-msg" role="status" aria-live="polite"></span>'
+	return '<div class="bang-smtp-panel">'
+		. '<h3>' . esc_html__( '接线说明', 'bang' ) . '</h3>'
+		. '<p class="bang-f-d">' . esc_html( $statu ) . '</p>'
+		. '<p class="bang-f-d">' . esc_html__( '端口与加密方式要成对：SSL 用 465，STARTTLS 用 587，不加密用 25。多数国内邮箱 / 企业邮箱要求在服务商后台先开通 SMTP 并生成「授权码」，把授权码填进「密码 / 授权码」。', 'bang' ) . '</p>'
+		. '<p class="bang-f-d">' . esc_html__( '测试只发一封信，成功与否会立刻显示；失败信息里带有服务器返回的原因，按它调整配置即可。改了配置先点「保存设置」，再点测试。', 'bang' ) . '</p>'
+		. '<p class="bang-smtp-actions">'
+		. '<button type="button" class="button is-primary" id="bang-smtp-test-btn"' . ( $on ? '' : ' disabled' ) . '>'
+		. esc_html__( '发送测试邮件', 'bang' ) . '</button>'
+		. '<span class="bang-smtp-msg" id="bang-smtp-test-msg" role="status" aria-live="polite"></span>'
 		. '</p>'
-		. '<script>(function(){var b=document.getElementById("pk-smtp-test-btn");if(!b){return;}b.addEventListener("click",function(){'
-		. 'var m=document.getElementById("pk-smtp-test-msg");var t=document.getElementById("pk-field-smtp_test_to");'
-		. 'b.disabled=true;if(m){m.textContent="发送中…";m.className="pk-smtp-msg";}'
-		. 'var fd=new FormData();fd.append("action","pk_smtp_test");fd.append("nonce",' . wp_json_encode( $nonce ) . ');'
+		. '<script>(function(){var b=document.getElementById("bang-smtp-test-btn");if(!b){return;}b.addEventListener("click",function(){'
+		. 'var m=document.getElementById("bang-smtp-test-msg");var t=document.getElementById("bang-field-smtp_test_to");'
+		. 'b.disabled=true;if(m){m.textContent="发送中…";m.className="bang-smtp-msg";}'
+		. 'var fd=new FormData();fd.append("action","bang_smtp_test");fd.append("nonce",' . wp_json_encode( $nonce ) . ');'
 		. 'fd.append("to",t?t.value:"");'
 		. 'fetch(window.ajaxurl||"/wp-admin/admin-ajax.php",{method:"POST",credentials:"same-origin",body:fd})'
 		. '.then(function(r){return r.json();}).then(function(res){b.disabled=false;'
-		. 'if(!m){return;}if(res&&res.success){m.textContent=(res.data&&res.data.message)||"已发出";m.className="pk-smtp-msg is-ok";}'
-		. 'else{m.textContent=(typeof res.data==="string"?res.data:(res.data&&res.data.message)||"发送失败");m.className="pk-smtp-msg is-err";}})'
-		. '.catch(function(){b.disabled=false;if(m){m.textContent="网络异常，请重试";m.className="pk-smtp-msg is-err";}});});})();</script>'
+		. 'if(!m){return;}if(res&&res.success){m.textContent=(res.data&&res.data.message)||"已发出";m.className="bang-smtp-msg is-ok";}'
+		. 'else{m.textContent=(typeof res.data==="string"?res.data:(res.data&&res.data.message)||"发送失败");m.className="bang-smtp-msg is-err";}})'
+		. '.catch(function(){b.disabled=false;if(m){m.textContent="网络异常，请重试";m.className="bang-smtp-msg is-err";}});});})();</script>'
 		. '</div>';
 }

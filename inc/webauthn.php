@@ -6,9 +6,9 @@
  * 站点只保存公钥：注册时 navigator.credentials.create()，登录时 credentials.get()，
  * 服务端验签后直接发登录 Cookie，全程不需要密码。
  *
- * - 凭据存 user_meta pk_passkeys（id / 公钥 PEM / 签名计数 / 创建时间）；
+ * - 凭据存 user_meta bang_passkeys（id / 公钥 PEM / 签名计数 / 创建时间）；
  * - 挑战存 transient，120 秒有效：注册用用户身份定位，登录用随机 token 定位；
- * - REST 路由 POST /wp-json/pianke/v1/passkey/{options|register|login|remove}。
+ * - REST 路由 POST /wp-json/bang/v1/passkey/{options|register|login|remove}。
  *
  * PHP 版库来自 lbuchs/WebAuthn（MIT），已收进 inc/lib/，只在本文件 require。
  *
@@ -36,14 +36,14 @@ if ( ! function_exists( 'str_starts_with' ) ) {
 require_once get_template_directory() . '/inc/lib/WebAuthn.php';
 require_once get_template_directory() . '/inc/lib/WebAuthnException.php';
 
-const PK_PASSKEY_TTL = 180; // 挑战有效期（秒）
+const BANG_PASSKEY_TTL = 180; // 挑战有效期（秒）
 
 /**
  * Relying Party 信息：rpId 必须等于站点域名
  *
  * @return array{id:string,name:string}
  */
-function pk_webauthn_rp() {
+function bang_webauthn_rp() {
 	$host = (string) parse_url( home_url(), PHP_URL_HOST );
 	if ( ! $host ) {
 		$host = (string) ( isset( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : 'localhost' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
@@ -57,8 +57,8 @@ function pk_webauthn_rp() {
 /**
  * 新建一个库实例（base64url 编码，客户端可直接转 ArrayBuffer）
  */
-function pk_webauthn_instance() {
-	$rp = pk_webauthn_rp();
+function bang_webauthn_instance() {
+	$rp = bang_webauthn_rp();
 	return new lbuchs\WebAuthn\WebAuthn( $rp['name'], $rp['id'], null, true );
 }
 
@@ -68,8 +68,8 @@ function pk_webauthn_instance() {
  * @param int $user_id 用户 ID。
  * @return array<int,array<string,mixed>>
  */
-function pk_passkeys_of( $user_id ) {
-	$list = get_user_meta( (int) $user_id, 'pk_passkeys', true );
+function bang_passkeys_of( $user_id ) {
+	$list = get_user_meta( (int) $user_id, 'bang_passkeys', true );
 	return is_array( $list ) ? array_values( $list ) : array();
 }
 
@@ -79,8 +79,8 @@ function pk_passkeys_of( $user_id ) {
  * @param int   $user_id 用户 ID。
  * @param array $list    密钥列表。
  */
-function pk_passkeys_save( $user_id, $list ) {
-	update_user_meta( (int) $user_id, 'pk_passkeys', array_values( $list ) );
+function bang_passkeys_save( $user_id, $list ) {
+	update_user_meta( (int) $user_id, 'bang_passkeys', array_values( $list ) );
 }
 
 /**
@@ -92,25 +92,25 @@ function pk_passkeys_save( $user_id, $list ) {
  * @param string      $scope     reg_{uid} 或 login_{token}。
  * @return string|false
  */
-function pk_webauthn_challenge( $challenge, $scope ) {
-	$key = 'pk_wc_' . $scope;
+function bang_webauthn_challenge( $challenge, $scope ) {
+	$key = 'bang_wc_' . $scope;
 	if ( false === $challenge ) {
 		$got = get_transient( $key );
 		return is_string( $got ) && $got ? hex2bin( $got ) : false;
 	}
-	set_transient( $key, bin2hex( $challenge ), PK_PASSKEY_TTL );
+	set_transient( $key, bin2hex( $challenge ), BANG_PASSKEY_TTL );
 	return true;
 }
 
 /**
  * 前端配置追加：通行密钥 REST 基址 + 已登记列表（注册时用于防重复）
  *
- * @param array $config pkUser。
+ * @param array $config bangUser。
  * @return array
  */
-function pk_webauthn_config( $config ) {
+function bang_webauthn_config( $config ) {
 	$uid = get_current_user_id();
-	$config['passkeyBase'] = esc_url_raw( rest_url( 'pianke/v1/passkey' ) );
+	$config['passkeyBase'] = esc_url_raw( rest_url( 'bang/v1/passkey' ) );
 	$config['passkeys']    = $uid ? array_map(
 		function ( $item ) {
 			return array(
@@ -119,22 +119,22 @@ function pk_webauthn_config( $config ) {
 				'created' => (int) ( isset( $item['created'] ) ? $item['created'] : 0 ),
 			);
 		},
-		pk_passkeys_of( $uid )
+		bang_passkeys_of( $uid )
 	) : array();
 	return $config;
 }
-add_filter( 'pk_user_config', 'pk_webauthn_config' );
+add_filter( 'bang_user_config', 'bang_webauthn_config' );
 
 /**
  * 注册 REST 路由
  */
-function pk_webauthn_rest_route() {
+function bang_webauthn_rest_route() {
 	register_rest_route(
-		'pianke/v1',
+		'bang/v1',
 		'/passkey/options',
 		array(
 			'methods'             => 'POST',
-			'callback'            => 'pk_webauthn_options',
+			'callback'            => 'bang_webauthn_options',
 			'permission_callback' => '__return_true',
 			'args'                => array(
 				'intent' => array(
@@ -145,38 +145,38 @@ function pk_webauthn_rest_route() {
 		)
 	);
 	register_rest_route(
-		'pianke/v1',
+		'bang/v1',
 		'/passkey/register',
 		array(
 			'methods'             => 'POST',
-			'callback'            => 'pk_webauthn_register',
+			'callback'            => 'bang_webauthn_register',
 			'permission_callback' => function () {
 				return is_user_logged_in();
 			},
 		)
 	);
 	register_rest_route(
-		'pianke/v1',
+		'bang/v1',
 		'/passkey/login',
 		array(
 			'methods'             => 'POST',
-			'callback'            => 'pk_webauthn_login',
+			'callback'            => 'bang_webauthn_login',
 			'permission_callback' => '__return_true',
 		)
 	);
 	register_rest_route(
-		'pianke/v1',
+		'bang/v1',
 		'/passkey/remove',
 		array(
 			'methods'             => 'POST',
-			'callback'            => 'pk_webauthn_remove',
+			'callback'            => 'bang_webauthn_remove',
 			'permission_callback' => function () {
 				return is_user_logged_in();
 			},
 		)
 	);
 }
-add_action( 'rest_api_init', 'pk_webauthn_rest_route' );
+add_action( 'rest_api_init', 'bang_webauthn_rest_route' );
 
 /**
  * 下发挑战：intent=register（需登录）或 intent=login（游客，带一次性 token）
@@ -184,23 +184,23 @@ add_action( 'rest_api_init', 'pk_webauthn_rest_route' );
  * @param WP_REST_Request $request 请求。
  * @return array|WP_Error
  */
-function pk_webauthn_options( $request ) {
+function bang_webauthn_options( $request ) {
 	try {
-		$wa     = pk_webauthn_instance();
+		$wa     = bang_webauthn_instance();
 		$intent = (string) $request->get_param( 'intent' );
 
 		if ( 'register' === $intent ) {
 			$uid = get_current_user_id();
 			if ( ! $uid ) {
-				return new WP_Error( 'pk_no_login', '登录后才能添加', array( 'status' => 401 ) );
+				return new WP_Error( 'bang_no_login', '登录后才能添加', array( 'status' => 401 ) );
 			}
 			$user = wp_get_current_user();
 			$ids  = array();
-			foreach ( pk_passkeys_of( $uid ) as $item ) {
+			foreach ( bang_passkeys_of( $uid ) as $item ) {
 				$ids[] = lbuchs\WebAuthn\Binary\ByteBuffer::fromBase64Url( (string) $item['id'] );
 			}
 			$args  = $wa->getCreateArgs( pack( 'N', $uid ), $user->user_login, $user->display_name ? $user->display_name : $user->user_login, 30, 'required', 'preferred', null, $ids );
-			pk_webauthn_challenge( $wa->getChallenge()->getBinaryString(), 'reg_' . $uid );
+			bang_webauthn_challenge( $wa->getChallenge()->getBinaryString(), 'reg_' . $uid );
 			return array(
 				'intent'    => 'register',
 				'publicKey' => $args->publicKey,
@@ -210,7 +210,7 @@ function pk_webauthn_options( $request ) {
 		if ( 'login' === $intent ) {
 			$args  = $wa->getGetArgs( array(), 30, true, true, true, true, true, 'preferred' );
 			$token = bin2hex( random_bytes( 16 ) );
-			pk_webauthn_challenge( $wa->getChallenge()->getBinaryString(), 'login_' . $token );
+			bang_webauthn_challenge( $wa->getChallenge()->getBinaryString(), 'login_' . $token );
 			return array(
 				'intent'    => 'login',
 				'token'     => $token,
@@ -218,30 +218,30 @@ function pk_webauthn_options( $request ) {
 			);
 		}
 
-		return new WP_Error( 'pk_bad_intent', '参数不对', array( 'status' => 400 ) );
+		return new WP_Error( 'bang_bad_intent', '参数不对', array( 'status' => 400 ) );
 	} catch ( Exception $e ) {
-		return new WP_Error( 'pk_webauthn', '挑战生成失败：' . $e->getMessage(), array( 'status' => 500 ) );
+		return new WP_Error( 'bang_webauthn', '挑战生成失败：' . $e->getMessage(), array( 'status' => 500 ) );
 	}
 }
 
 /**
- * 注册确认：验签后把公钥存进当前用户的 pk_passkeys
+ * 注册确认：验签后把公钥存进当前用户的 bang_passkeys
  *
  * @param WP_REST_Request $request 请求。
  * @return array|WP_Error
  */
-function pk_webauthn_register( $request ) {
+function bang_webauthn_register( $request ) {
 	try {
 		$uid = get_current_user_id();
 		if ( ! $uid ) {
-			return new WP_Error( 'pk_no_login', '登录后才能添加', array( 'status' => 401 ) );
+			return new WP_Error( 'bang_no_login', '登录后才能添加', array( 'status' => 401 ) );
 		}
-		$challenge = pk_webauthn_challenge( false, 'reg_' . $uid );
+		$challenge = bang_webauthn_challenge( false, 'reg_' . $uid );
 		if ( ! $challenge ) {
-			return new WP_Error( 'pk_no_challenge', '挑战已过期，请重新添加', array( 'status' => 400 ) );
+			return new WP_Error( 'bang_no_challenge', '挑战已过期，请重新添加', array( 'status' => 400 ) );
 		}
 
-		$wa           = pk_webauthn_instance();
+		$wa           = bang_webauthn_instance();
 		$client_json  = lbuchs\WebAuthn\Binary\ByteBuffer::fromBase64Url( (string) $request->get_param( 'clientDataJSON' ) )->getBinaryString();
 		$attestation  = lbuchs\WebAuthn\Binary\ByteBuffer::fromBase64Url( (string) $request->get_param( 'attestationObject' ) )->getBinaryString();
 		$data         = $wa->processCreate( $client_json, $attestation, $challenge, false, true, false );
@@ -251,11 +251,11 @@ function pk_webauthn_register( $request ) {
 			$label = $m[1];
 		}
 
-		$list = pk_passkeys_of( $uid );
+		$list = bang_passkeys_of( $uid );
 		$id   = lbuchs\WebAuthn\Binary\ByteBuffer::fromBase64Url( (string) $request->get_param( 'id' ) )->getHex();
 		foreach ( $list as $item ) {
 			if ( (string) $item['id'] === $id ) {
-				return new WP_Error( 'pk_exists', '这把钥匙已经登记过了', array( 'status' => 400 ) );
+				return new WP_Error( 'bang_exists', '这把钥匙已经登记过了', array( 'status' => 400 ) );
 			}
 		}
 		$list[] = array(
@@ -265,8 +265,8 @@ function pk_webauthn_register( $request ) {
 			'created' => time(),
 			'label'   => $label,
 		);
-		pk_passkeys_save( $uid, $list );
-		delete_transient( 'pk_wc_reg_' . $uid );
+		bang_passkeys_save( $uid, $list );
+		delete_transient( 'bang_wc_reg_' . $uid );
 
 		return array(
 			'ok'    => true,
@@ -274,7 +274,7 @@ function pk_webauthn_register( $request ) {
 			'count' => count( $list ),
 		);
 	} catch ( Exception $e ) {
-		return new WP_Error( 'pk_webauthn', '添加失败：' . $e->getMessage(), array( 'status' => 400 ) );
+		return new WP_Error( 'bang_webauthn', '添加失败：' . $e->getMessage(), array( 'status' => 400 ) );
 	}
 }
 
@@ -284,22 +284,22 @@ function pk_webauthn_register( $request ) {
  * @param WP_REST_Request $request 请求。
  * @return array|WP_Error
  */
-function pk_webauthn_login( $request ) {
+function bang_webauthn_login( $request ) {
 	try {
 		$token     = (string) $request->get_param( 'token' );
-		$challenge = $token ? pk_webauthn_challenge( false, 'login_' . $token ) : false;
+		$challenge = $token ? bang_webauthn_challenge( false, 'login_' . $token ) : false;
 		if ( ! $challenge ) {
-			return new WP_Error( 'pk_no_challenge', '挑战已过期，请重新验证', array( 'status' => 400 ) );
+			return new WP_Error( 'bang_no_challenge', '挑战已过期，请重新验证', array( 'status' => 400 ) );
 		}
 
 		$cred_hex = lbuchs\WebAuthn\Binary\ByteBuffer::fromBase64Url( (string) $request->get_param( 'id' ) )->getHex();
-		$found    = pk_webauthn_find_user( $cred_hex );
+		$found    = bang_webauthn_find_user( $cred_hex );
 		if ( ! $found ) {
-			return new WP_Error( 'pk_no_credential', '这台设备还没有登记过', array( 'status' => 404 ) );
+			return new WP_Error( 'bang_no_credential', '这台设备还没有登记过', array( 'status' => 404 ) );
 		}
 		list( $user, $item ) = $found;
 
-		$wa = pk_webauthn_instance();
+		$wa = bang_webauthn_instance();
 		$ok = $wa->processGet(
 			lbuchs\WebAuthn\Binary\ByteBuffer::fromBase64Url( (string) $request->get_param( 'clientDataJSON' ) )->getBinaryString(),
 			lbuchs\WebAuthn\Binary\ByteBuffer::fromBase64Url( (string) $request->get_param( 'authenticatorData' ) )->getBinaryString(),
@@ -315,22 +315,22 @@ function pk_webauthn_login( $request ) {
 		}
 
 		/* 回写签名计数，防克隆检测 */
-		$users = pk_passkeys_of( $user->ID );
+		$users = bang_passkeys_of( $user->ID );
 		foreach ( $users as $k => $v ) {
 			if ( (string) $v['id'] === $cred_hex ) {
 				$users[ $k ]['counter'] = (int) $wa->getSignatureCounter();
 			}
 		}
-		pk_passkeys_save( $user->ID, $users );
-		delete_transient( 'pk_wc_login_' . $token );
+		bang_passkeys_save( $user->ID, $users );
+		delete_transient( 'bang_wc_login_' . $token );
 
 		wp_set_current_user( $user->ID );
 		wp_set_auth_cookie( $user->ID, true, is_ssl() );
-		pk_device_issue( $user->ID );
+		bang_device_issue( $user->ID );
 
 		/* 跳转：优先客户端带来的 redirect_to，校验只允许站内地址 */
 		$raw      = (string) $request->get_param( 'redirect_to' );
-		$redirect = $raw ? wp_validate_redirect( esc_url_raw( $raw ), pk_user_url() ) : pk_user_redirect();
+		$redirect = $raw ? wp_validate_redirect( esc_url_raw( $raw ), bang_user_url() ) : bang_user_redirect();
 
 		return array(
 			'loggedIn' => true,
@@ -338,7 +338,7 @@ function pk_webauthn_login( $request ) {
 			'redirect' => $redirect,
 		);
 	} catch ( Exception $e ) {
-		return new WP_Error( 'pk_webauthn', '验证失败：' . $e->getMessage(), array( 'status' => 400 ) );
+		return new WP_Error( 'bang_webauthn', '验证失败：' . $e->getMessage(), array( 'status' => 400 ) );
 	}
 }
 
@@ -351,17 +351,17 @@ function pk_webauthn_login( $request ) {
  * @param string $cred_hex 凭据 id（hex）。
  * @return array{0:WP_User,1:array}|null
  */
-function pk_webauthn_find_user( $cred_hex ) {
+function bang_webauthn_find_user( $cred_hex ) {
 	$query = new WP_User_Query(
 		array(
-			'meta_key'     => 'pk_passkeys',
+			'meta_key'     => 'bang_passkeys',
 			'meta_compare' => 'LIKE',
 			'meta_value'   => $cred_hex,
 			'number'       => 5,
 		)
 	);
 	foreach ( $query->get_results() as $user ) {
-		foreach ( pk_passkeys_of( $user->ID ) as $item ) {
+		foreach ( bang_passkeys_of( $user->ID ) as $item ) {
 			if ( (string) $item['id'] === $cred_hex ) {
 				return array( $user, $item );
 			}
@@ -376,10 +376,10 @@ function pk_webauthn_find_user( $cred_hex ) {
  * @param WP_REST_Request $request 请求。
  * @return array|WP_Error
  */
-function pk_webauthn_remove( $request ) {
+function bang_webauthn_remove( $request ) {
 	$uid    = get_current_user_id();
 	$target = (string) $request->get_param( 'id' );
-	$list   = pk_passkeys_of( $uid );
+	$list   = bang_passkeys_of( $uid );
 	$kept   = array();
 	foreach ( $list as $item ) {
 		if ( (string) $item['id'] !== $target ) {
@@ -387,8 +387,8 @@ function pk_webauthn_remove( $request ) {
 		}
 	}
 	if ( count( $kept ) === count( $list ) ) {
-		return new WP_Error( 'pk_not_found', '没有这把钥匙', array( 'status' => 404 ) );
+		return new WP_Error( 'bang_not_found', '没有这把钥匙', array( 'status' => 404 ) );
 	}
-	pk_passkeys_save( $uid, $kept );
+	bang_passkeys_save( $uid, $kept );
 	return array( 'ok' => true, 'count' => count( $kept ) );
 }

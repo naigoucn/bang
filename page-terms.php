@@ -8,22 +8,22 @@
 
 get_header();
 
-pk_page_open( '用户协议', '使用本站前，请先读完这些约定。', 'pk-legal-page' );
+bang_page_open( '用户协议', '使用本站前，请先读完这些约定。', 'bang-legal-page' );
 ?>
 	<?php
 	while ( have_posts() ) :
 		the_post();
-		$pk_body = trim( (string) get_the_content() );
-		if ( '' !== $pk_body ) :
+		$bang_body = trim( (string) get_the_content() );
+		if ( '' !== $bang_body ) :
 			?>
-			<div class="prose pk-page-body"><?php the_content(); ?></div>
+			<div class="prose bang-page-body"><?php the_content(); ?></div>
 			<?php
 		endif;
 		?>
-		<p class="pk-legal-updated">最后更新：<?php echo esc_html( get_the_modified_time( 'Y-m-d' ) ); ?></p>
+		<p class="bang-legal-updated">最后更新：<?php echo esc_html( get_the_modified_time( 'Y-m-d' ) ); ?></p>
 		<?php
 	endwhile;
 	?>
 <?php
-pk_page_close();
+bang_page_close();
 get_footer();

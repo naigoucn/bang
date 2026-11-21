@@ -13,7 +13,7 @@ get_header();
 			<?php
 			while ( have_posts() ) :
 				the_post();
-				echo pk_reading_html( get_the_ID() ); // phpcs:ignore WordPress.Security.EscapeOutput
+				echo bang_reading_html( get_the_ID() ); // phpcs:ignore WordPress.Security.EscapeOutput
 			endwhile;
 			?>
 		</div>

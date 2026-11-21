@@ -15,13 +15,13 @@ get_header();
 		<h1 class="say-title">说说</h1>
 		<p class="say-desc">随手记下的短句与片段。</p>
 	</header>
-	<a class="say-back" href="<?php echo esc_url( get_post_type_archive_link( 'pk_say' ) ); ?>"><span>返回说说</span></a>
+	<a class="say-back" href="<?php echo esc_url( get_post_type_archive_link( 'bang_say' ) ); ?>"><span>返回说说</span></a>
 	<?php
 	while ( have_posts() ) :
 		the_post();
 		?>
 	<div class="say-single-inner">
-		<?php echo pk_say_card_html( get_the_ID(), 'single' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- 内部字段均已转义 ?>
+		<?php echo bang_say_card_html( get_the_ID(), 'single' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- 内部字段均已转义 ?>
 	</div>
 	<?php endwhile; ?>
 </main>

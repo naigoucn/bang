@@ -15,54 +15,70 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * 页面清单。改 slug / 标题只改这里，侧栏与模板都读它。
  */
-function pk_site_page_defs() {
+function bang_site_page_defs() {
 	return array(
+		'music'      => array(
+			'title' => __( '音乐', 'bang' ),
+			'text'  => '',
+		),
 		'archive'    => array(
-			'title' => __( '文章归档', 'pianke' ),
+			'title' => __( '文章归档', 'bang' ),
 			'text'  => '',
 		),
 		'categories' => array(
-			'title' => __( '分类', 'pianke' ),
+			'title' => __( '分类', 'bang' ),
 			'text'  => '',
 		),
 		'theme'    => array(
-			'title' => __( '主题介绍', 'pianke' ),
+			'title' => __( '主题介绍', 'bang' ),
 			'text'  => '',
 		),
 		'about'    => array(
-			'title' => __( '关于', 'pianke' ),
+			'title' => __( '关于', 'bang' ),
 			'text'  => "Bang，一个用 ink 写作的博客——落笔有声，留白有度。\n\n这里收录短动态、图集与长文章：点开任意卡片即可在当前页展开阅读，读完关掉会缩回原位；手机上左右滑动就能翻到上一篇或下一篇。",
 		),
 		'contact'  => array(
-			'title' => __( '联系', 'pianke' ),
+			'title' => __( '联系', 'bang' ),
 			'text'  => '',
 		),
 		'privacy'  => array(
-			'title' => __( '隐私政策', 'pianke' ),
+			'title' => __( '隐私政策', 'bang' ),
 			'text'  => "我们重视你的隐私。本政策说明本站如何收集、使用和保护你在使用本站过程中提供的信息。\n\n一、我们收集的信息\n你注册时提供的用户名、邮箱与个人资料；你发表的文章、评论、说说与友链申请；以及为保障安全所必需的技术信息（如 IP 地址、浏览器标识与操作时间）。\n\n二、信息的使用\n上述信息仅用于提供和改进本站服务、完成账号与互动功能、防范垃圾与滥用行为。我们不会将你的个人信息出售给第三方。\n\n三、Cookie 与本地存储\n本站使用必要的 Cookie 维持登录状态与偏好设置（如深浅色）。辅助功能若使用本地存储，仅保存在你的设备上，你可以随时清除。\n\n四、信息共享\n除法律法规要求或为保护你的权益所必需的情形外，我们不会向第三方披露你的个人信息。评论与公开内容会按你发布时的可见范围展示。\n\n五、数据安全\n我们采用合理的技术与管理措施保护信息安全，但互联网传输无法保证绝对安全，请妥善保管你的账号凭据。\n\n六、你的权利\n你可以随时在账号设置中修改个人资料，也可以联系我们申请导出或删除你的数据。\n\n七、政策更新\n本政策可能随功能调整而更新，更新后会在本页公布。继续使用本站即视为你接受更新后的政策。\n\n如有疑问，请通过「联系」页与我们取得联系。",
 		),
 		'terms'    => array(
-			'title' => __( '用户协议', 'pianke' ),
+			'title' => __( '用户协议', 'bang' ),
 			'text'  => "欢迎使用本站。使用前请仔细阅读以下条款，继续使用即表示你同意遵守。\n\n一、服务说明\n本站提供内容浏览、账号注册、文章与评论发布、说说、友链申请等功能。我们可能随时调整或停止部分功能，无需另行通知。\n\n二、账号规则\n请使用真实、合法的信息注册，并妥善保管账号凭据。你的账号不得转让、出租或供他人使用。发现异常时请及时联系我们。\n\n三、用户内容\n你发布的内容应遵守法律法规，不得包含违法、侵权、骚扰、垃圾广告或有害信息。你保留内容的著作权，同时授予本站为展示与传播所必需的合理使用许可。我们有权对违规内容进行修改、隐藏或删除。\n\n四、知识产权\n本站的程序、设计、文案与标识受法律保护。未经许可，不得复制、篡改或用于商业用途。第三方内容的权利归原作者所有。\n\n五、禁止行为\n不得利用本站从事攻击、爬虫滥用、批量注册、刷量、传播恶意代码或干扰他人正常使用的行为。\n\n六、免责声明\n本站内容由用户自行发布，不代表本站立场。因不可抗力、网络故障或第三方服务导致的服务中断，我们会在合理范围内协助处理，但不承担由此产生的间接损失。\n\n七、条款变更\n条款更新后会在本页公布，继续使用即视为接受。\n\n如有疑问，请通过「联系」页与我们取得联系。",
 		),
 		'links'    => array(
-			'title' => __( '友情链接', 'pianke' ),
+			'title' => __( '友情链接', 'bang' ),
 			'text'  => '',
 		),
 		'blocks'   => array(
-			'title' => __( '区块展厅', 'pianke' ),
+			'title' => __( '区块展厅', 'bang' ),
+			'text'  => '',
+		),
+		'reward'   => array(
+			'title' => __( '打赏', 'bang' ),
+			'text'  => '',
+		),
+		'footprint' => array(
+			'title' => __( '足迹', 'bang' ),
+			'text'  => '',
+		),
+		'gallery'  => array(
+			'title' => __( '图片集', 'bang' ),
 			'text'  => '',
 		),
 		'html-tag' => array(
-			'title' => __( '排版标签', 'pianke' ),
+			'title' => __( '排版标签', 'bang' ),
 			'text'  => '',
 		),
 		'help'     => array(
-			'title' => __( '帮助中心', 'pianke' ),
+			'title' => __( '帮助中心', 'bang' ),
 			'text'  => '',
 		),
 		'settings' => array(
-			'title' => __( '账号设置', 'pianke' ),
+			'title' => __( '账号设置', 'bang' ),
 			'text'  => '',
 		),
 	);
@@ -71,7 +87,7 @@ function pk_site_page_defs() {
 /**
  * 页面 ID（本请求内缓存，避免侧栏一次渲染查五次）。
  */
-function pk_site_page_id( $slug, $flush = false ) {
+function bang_site_page_id( $slug, $flush = false ) {
 	static $cache = array();
 	if ( $flush ) {
 		$cache = array();
@@ -88,15 +104,15 @@ function pk_site_page_id( $slug, $flush = false ) {
  *
  * 信息页是普通页面，但视觉上按「列表页」处理：不套阅读层的单页头部、不隐藏页脚。
  */
-function pk_is_site_page() {
-	return is_page( array_keys( pk_site_page_defs() ) );
+function bang_is_site_page() {
+	return is_page( array_keys( bang_site_page_defs() ) );
 }
 
 /**
  * 页面地址。页面还没建好时退回固定路径，避免侧栏输出空 href。
  */
-function pk_site_page_url( $slug ) {
-	$id = pk_site_page_id( $slug );
+function bang_site_page_url( $slug ) {
+	$id = bang_site_page_id( $slug );
 	return $id ? get_permalink( $id ) : home_url( '/' . $slug . '/' );
 }
 
@@ -106,13 +122,13 @@ function pk_site_page_url( $slug ) {
  * 用版本号做闸门：只在版本变化时查一次数据库，之后每个请求只读一个 option。
  * 不校验权限——主题换到新站（含演示站）时前台也可能先被打开，页面必须存在。
  */
-function pk_ensure_site_pages() {
-	$ver = '9';
-	if ( $ver === get_option( 'pk_site_pages_v' ) ) {
+function bang_ensure_site_pages() {
+	$ver = '14';
+	if ( $ver === get_option( 'bang_site_pages_v' ) ) {
 		return;
 	}
-	foreach ( pk_site_page_defs() as $slug => $def ) {
-		if ( pk_site_page_id( $slug ) ) {
+	foreach ( bang_site_page_defs() as $slug => $def ) {
+		if ( bang_site_page_id( $slug ) ) {
 			continue;
 		}
 		$id = wp_insert_post(
@@ -126,7 +142,7 @@ function pk_ensure_site_pages() {
 		);
 		if ( $id && ! is_wp_error( $id ) ) {
 			/* 让缓存失效：同请求内后续调用（header 渲染）拿到真实 ID */
-			pk_site_page_id( $slug, true );
+			bang_site_page_id( $slug, true );
 			wp_cache_delete( $id, 'posts' );
 		}
 	}
@@ -134,22 +150,22 @@ function pk_ensure_site_pages() {
 	/* 已下线的信息页（0.11.28 去掉「创作者们」）：移入回收站而不是硬删，
 	   否则页面会失去 page-{slug}.php 模板，被当成普通页面套上阅读层头部。
 	   回收站里可随时恢复：后台 → 页面 → 回收站。 */
-	foreach ( array( 'creators' ) as $slug ) {
-		$id = pk_site_page_id( $slug );
+	foreach ( array( 'creators', 'ranking' ) as $slug ) {
+		$id = bang_site_page_id( $slug );
 		if ( $id ) {
 			wp_trash_post( $id );
-			pk_site_page_id( $slug, true );
+			bang_site_page_id( $slug, true );
 		}
 	}
 
-	update_option( 'pk_site_pages_v', $ver );
+	update_option( 'bang_site_pages_v', $ver );
 }
-add_action( 'init', 'pk_ensure_site_pages', 20 );
+add_action( 'init', 'bang_ensure_site_pages', 20 );
 
 /**
  * 站点统计：关于页 / 归档页共用。
  */
-function pk_site_stats() {
+function bang_site_stats() {
 	static $stats = null;
 	if ( null !== $stats ) {
 		return $stats;
@@ -182,8 +198,8 @@ function pk_site_stats() {
 /**
  * 联系邮箱：优先使用设置里的「联系邮箱」，否则退回管理员邮箱。
  */
-function pk_contact_email() {
-	$mail = trim( (string) pk_opt( 'contact_email' ) );
+function bang_contact_email() {
+	$mail = trim( (string) bang_opt( 'contact_email' ) );
 	if ( ! is_email( $mail ) ) {
 		$mail = (string) get_option( 'admin_email' );
 	}
@@ -196,13 +212,13 @@ function pk_contact_email() {
  * 主题不再自带友链文本框，数据一律走核心 wp_links 表；核心默认不注册
  * 「链接」菜单，这里在首次加载时静默补上开关，后台与前台都不需要手动设置。
  */
-function pk_enable_link_manager() {
+function bang_enable_link_manager() {
 	if ( ! get_option( 'link_manager_enabled' ) ) {
 		/* WP 默认已存 '0'，add_option 不会覆盖已存在的值，必须用 update_option 才会显示后台「链接」菜单 */
 		update_option( 'link_manager_enabled', 1 );
 	}
 }
-add_action( 'init', 'pk_enable_link_manager', 5 );
+add_action( 'init', 'bang_enable_link_manager', 5 );
 
 /**
  * 友情链接：读核心链接管理器（wp_links），映射成卡片流用的数组。
@@ -213,7 +229,7 @@ add_action( 'init', 'pk_enable_link_manager', 5 );
  *
  * @return array
  */
-function pk_friend_links() {
+function bang_friend_links() {
 	static $cache = null;
 	if ( null !== $cache ) {
 		return $cache;
@@ -227,7 +243,7 @@ function pk_friend_links() {
 
 	/* 0.13.27 起只认核心链接；老站点若还有文本框数据，只读迁移一次进核心，
 	   之后不再回读，保证「只有一份数据源」。 */
-	pk_migrate_legacy_friend_links();
+	bang_migrate_legacy_friend_links();
 
 	$links = get_bookmarks(
 		array(
@@ -285,21 +301,21 @@ function pk_friend_links() {
 /**
  * 老的「友情链接」文本框一次性迁移到核心链接管理器。
  *
- * 迁移过的数据记在 pk_links_migrated option 里，之后原封不动保留（不删后台旧数据），
+ * 迁移过的数据记在 bang_links_migrated option 里，之后原封不动保留（不删后台旧数据），
  * 前台只读核心，不会再出现两份数据打架。
  */
-function pk_migrate_legacy_friend_links() {
+function bang_migrate_legacy_friend_links() {
 	static $done = false;
 	if ( $done ) {
 		return;
 	}
 	$done = true;
-	if ( get_option( 'pk_links_migrated' ) || ! function_exists( 'wp_insert_link' ) ) {
+	if ( get_option( 'bang_links_migrated' ) || ! function_exists( 'wp_insert_link' ) ) {
 		return;
 	}
-	$raw = trim( (string) pk_opt( 'friend_links' ) );
+	$raw = trim( (string) bang_opt( 'friend_links' ) );
 	if ( '' === $raw ) {
-		update_option( 'pk_links_migrated', 1 );
+		update_option( 'bang_links_migrated', 1 );
 		return;
 	}
 	$lines = preg_split( '/\r\n|\r|\n/', $raw );
@@ -340,7 +356,7 @@ function pk_migrate_legacy_friend_links() {
 		}
 		wp_insert_link( $args );
 	}
-	update_option( 'pk_links_migrated', 1 );
+	update_option( 'bang_links_migrated', 1 );
 }
 
 /**
@@ -349,7 +365,7 @@ function pk_migrate_legacy_friend_links() {
  *
  * @return string[]
  */
-function pk_link_groups() {
+function bang_link_groups() {
 	static $cache = null;
 	if ( null !== $cache ) {
 		return $cache;
@@ -384,7 +400,7 @@ function pk_link_groups() {
  * @param string $url 站点地址。
  * @return string
  */
-function pk_link_host( $url ) {
+function bang_link_host( $url ) {
 	$host = (string) wp_parse_url( $url, PHP_URL_HOST );
 	if ( '' === $host ) {
 		return (string) $url;
@@ -398,7 +414,7 @@ function pk_link_host( $url ) {
  * @param string $name 站点名。
  * @return string
  */
-function pk_link_initial( $name ) {
+function bang_link_initial( $name ) {
 	$name = trim( (string) $name );
 	if ( '' === $name ) {
 		return '?';
@@ -412,21 +428,40 @@ function pk_link_initial( $name ) {
 /**
  * 页面外壳开场：标题 + 一句说明。各信息页模板共用。
  */
-function pk_page_open( $title, $sub = '', $extra_class = '' ) {
+function bang_page_open( $title, $sub = '', $extra_class = '' ) {
 	$class_attr = $extra_class ? ' ' . esc_attr( trim( (string) $extra_class ) ) : '';
 	echo '<div id="swup-wrapper">';
-	echo '<main class="wrap pk-page-wrap pk-page-wide' . $class_attr . '" id="main">';
-	echo '<div class="pk-page-inner">';
-	echo '<header class="pk-page-head"><h1 class="pk-page-title">' . esc_html( $title ) . '</h1>';
+	echo '<main class="wrap bang-page-wrap bang-page-wide' . $class_attr . '" id="main">';
+	echo '<div class="bang-page-inner">';
+	echo '<header class="bang-page-head"><h1 class="bang-page-title">' . esc_html( $title ) . '</h1>';
 	if ( $sub ) {
-		echo '<p class="pk-page-sub">' . esc_html( $sub ) . '</p>';
+		echo '<p class="bang-page-sub">' . esc_html( $sub ) . '</p>';
 	}
 	echo '</header>';
 }
 
 /**
  * 页面外壳收尾。
+ *
+ * @param string $dock_html 可选：自定义 dock HTML。图片集单图集页传文章同款
+ *                          bang_dock_html()，从而带齐返回 / 点赞 / 评论 / 分享；
+ *                          留空则沿用站点信息页的单置顶按钮。
  */
-function pk_page_close() {
-	echo '</div></main></div>';
+function bang_page_close( $dock_html = '' ) {
+	/* 站点信息页（theme/about/privacy 等）没有文章阅读层，也就没有文章页的 dock。
+	   补一个同款横排胶囊、只放一个置顶按钮，与文章页的置顶体验一致；
+	   置顶靠 data-bang-action="top" 走 app.js 的 scrollReading(0)。
+	   【必须放在 #swup-wrapper 内、</main> 后】Swup 只交换 wrapper：放外面会
+	   从站点页残留到首页（返回首页后凭空多一个点了没反应的置顶按钮），
+	   反向从首页跳入站点页又会缺失。放进来后随换页一起更新，两个方向都对。 */
+	echo '</div></main>';
+	if ( $dock_html ) {
+		echo $dock_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- 由 bang_dock_html() 内部逐字段转义
+	} else {
+		echo '<nav class="bang-dock bang-dock--page" aria-label="页面操作">'
+			. '<button class="dock-btn dock-top" type="button" data-bang-action="top" aria-label="返回顶部" title="返回顶部">'
+			. bang_icon( 'top', 20 ) . '</button>'
+			. '</nav>';
+	}
+	echo '</div>';
 }

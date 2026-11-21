@@ -682,9 +682,9 @@ class WebAuthn {
 
         // Use Sodium to verify EdDSA 25519 as its not yet supported by openssl
         if (\function_exists('sodium_crypto_sign_verify_detached') && !\in_array('ed25519', \openssl_get_curve_names(), true)) {
-            $pkParts = [];
-            if (\preg_match('/BEGIN PUBLIC KEY\-+(?:\s|\n|\r)+([^\-]+)(?:\s|\n|\r)*\-+END PUBLIC KEY/i', $credentialPublicKey, $pkParts)) {
-                $rawPk = \base64_decode($pkParts[1]);
+            $bangParts = [];
+            if (\preg_match('/BEGIN PUBLIC KEY\-+(?:\s|\n|\r)+([^\-]+)(?:\s|\n|\r)*\-+END PUBLIC KEY/i', $credentialPublicKey, $bangParts)) {
+                $rawPk = \base64_decode($bangParts[1]);
 
                 // 30        = der sequence
                 // 2a        = length 42 byte

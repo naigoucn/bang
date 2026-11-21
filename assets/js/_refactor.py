@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import io
 
-path = r'D:\wwwroot\theme.naigou.cn\wp-content\themes\pianke\assets\js\app.js'
+path = r'D:\wwwroot\theme.naigou.cn\wp-content\themes\bang\assets\js\app.js'
 with io.open(path, 'r', encoding='utf-8') as f:
     orig = f.readlines()
 
 A_NEW = (
-"\t/* 阅读层返回：独立文章页的 [data-pk-back] 是真实 <a href=\"/\">，由 Swup 接管跳转 */\n"
+"\t/* 阅读层返回：独立文章页的 [data-bang-back] 是真实 <a href=\"/\">，由 Swup 接管跳转 */\n"
 )
 
 B_NEW = (
@@ -112,8 +112,8 @@ BLOCK1 = (
 "\t});\n"
 "\tif (searchInput) { searchInput.addEventListener('input', applyFilter); }\n"
 "\n"
-"\t/* 从文章页搜索回车跳转到 ?pk_s= 后，回到首页自动带入关键词并展开搜索弹窗 */\n"
-"\tvar initialS = (new URLSearchParams(location.search)).get('pk_s');\n"
+"\t/* 从文章页搜索回车跳转到 ?bang_s= 后，回到首页自动带入关键词并展开搜索弹窗 */\n"
+"\tvar initialS = (new URLSearchParams(location.search)).get('bang_s');\n"
 "\tif (initialS) {\n"
 "\t\tsearchInput.value = initialS;\n"
 "\t\tapplyFilter();\n"
@@ -164,7 +164,7 @@ BLOCK2 = (
 "\tfunction clearMorphNames() {\n"
 "\t\tvar els = document.querySelectorAll('[style*=\"view-transition-name\"]');\n"
 "\t\tArray.prototype.forEach.call(els, function (el) { el.style.viewTransitionName = ''; });\n"
-"\t\troot.classList.remove('pk-morphing', 'pk-morph-open', 'pk-morph-close');\n"
+"\t\troot.classList.remove('bang-morphing', 'bang-morph-open', 'bang-morph-close');\n"
 "\t}\n"
 "\n"
 "\tvar swup = null;\n"
@@ -173,9 +173,9 @@ BLOCK2 = (
 "\t\tswup = new SwupCtor({\n"
 "\t\t\tcontainers: ['#swup-wrapper'],\n"
 "\t\t\t/* 动画由我们自己的 content:replace 钩子驱动，不需要 Swup 的 CSS 动画等待 */\n"
-"\t\t\tanimationSelector: '.pk-swup-no-anim',\n"
+"\t\t\tanimationSelector: '.bang-swup-no-anim',\n"
 "\t\t\t/* 排除灯箱 / 外链中转 / 新窗口 / 下载等不应被 Swup 接管的链接 */\n"
-"\t\t\tlinkSelector: 'a[href]:not([data-no-swup]):not([target=\"_blank\"]):not([data-pk-lightbox]):not([data-pk-go]):not([download])'\n"
+"\t\t\tlinkSelector: 'a[href]:not([data-no-swup]):not([target=\"_blank\"]):not([data-bang-lightbox]):not([data-bang-go]):not([download])'\n"
 "\t\t});\n"
 "\n"
 "\t\tvar homeScroll = 0;\n"
@@ -209,7 +209,7 @@ BLOCK2 = (
 "\t\t\tfunction swap() { outEl.replaceWith(inEl.cloneNode(true)); }\n"
 "\n"
 "\t\t\tif (supportsVT && !reduceMotion && dir) {\n"
-"\t\t\t\troot.classList.add('pk-morphing', dir === 'open' ? 'pk-morph-open' : 'pk-morph-close');\n"
+"\t\t\t\troot.classList.add('bang-morphing', dir === 'open' ? 'bang-morph-open' : 'bang-morph-close');\n"
 "\t\t\t\tif (dir === 'open') { setHeadState(true, page.document); }\n"
 "\t\t\t\telse { setHeadState(false, null); }\n"
 "\t\t\t\tif (oldEl) { oldEl.style.viewTransitionName = 'morph'; }\n"
@@ -237,8 +237,8 @@ BLOCK2 = (
 "\t\t\trefreshRefs();\n"
 "\t\t\tsetHeadState(toSingle, doc);\n"
 "\t\t\tif (doc && doc.title) { document.title = doc.title; }\n"
-"\t\t\tvar c = document.getElementById('pk-comments');\n"
-"\t\t\tif (c) { loadComments(c.getAttribute('data-pk-post-id'), c); }\n"
+"\t\t\tvar c = document.getElementById('bang-comments');\n"
+"\t\t\tif (c) { loadComments(c.getAttribute('data-bang-post-id'), c); }\n"
 "\t\t\tif (topics && topicList) {\n"
 "\t\t\t\tapplyTerm(topics.dataset.currentTerm || termFromUrl(), false);\n"
 "\t\t\t}\n"
@@ -273,8 +273,8 @@ BLOCK2 = (
 "\t\trefreshRefs();\n"
 "\t\tsetHeadState(toSingle, document);\n"
 "\t\tif (toSingle) {\n"
-"\t\t\tvar c = document.getElementById('pk-comments');\n"
-"\t\t\tif (c) { loadComments(c.getAttribute('data-pk-post-id'), c); }\n"
+"\t\t\tvar c = document.getElementById('bang-comments');\n"
+"\t\t\tif (c) { loadComments(c.getAttribute('data-bang-post-id'), c); }\n"
 "\t\t} else if (topics && topicList) {\n"
 "\t\t\tapplyTerm(topics.dataset.currentTerm || termFromUrl(), false);\n"
 "\t\t}\n"

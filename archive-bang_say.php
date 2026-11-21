@@ -13,13 +13,13 @@ get_header();
 		<p class="say-desc">随手记下的短句与片段。</p>
 	</header>
 	<?php if ( have_posts() ) : ?>
-	<?php /* 0.13.25：卡片流，每条说说带作者头像 / 昵称 / 时间，结构统一由 pk_say_card_html() 输出 */ ?>
+	<?php /* 0.13.25：卡片流，每条说说带作者头像 / 昵称 / 时间，结构统一由 bang_say_card_html() 输出 */ ?>
 	<ol class="say-list">
 		<?php
 		while ( have_posts() ) :
 			the_post();
 			?>
-			<li class="say-item"><?php echo pk_say_card_html( get_the_ID() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- 内部字段均已转义 ?></li>
+			<li class="say-item"><?php echo bang_say_card_html( get_the_ID() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- 内部字段均已转义 ?></li>
 		<?php endwhile; ?>
 	</ol>
 	<?php else : ?>

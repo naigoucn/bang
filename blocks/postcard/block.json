@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "bang/postcard",
+  "version": "0.13.0",
+  "title": "文章卡片",
+  "category": "bang-blocks",
+  "icon": "admin-post",
+  "description": "从站内文章中选择，自动带出封面、标题与摘要。",
+  "keywords": ["文章", "卡片", "推荐", "postcard"],
+  "textdomain": "bang",
+  "supports": {
+    "align": ["wide", "full"],
+    "anchor": true,
+    "className": true
+  },
+  "attributes": {
+    "target": {
+      "type": "string",
+      "default": ""
+    },
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "desc": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "example": {
+    "attributes": {
+      "target": "123",
+      "title": "推荐阅读",
+      "desc": "封面、标题、摘要自动读取，点卡片进文章。"
+    }
+  }
+}

@@ -12,7 +12,7 @@
 
 get_header();
 
-$pk_groups = array(
+$bang_groups = array(
 	array(
 		'id'    => 'start',
 		'num'   => '01',
@@ -37,7 +37,7 @@ $pk_groups = array(
 			array(
 				't' => '主题包含内容',
 				'd' => '自动建页与需要手建的一页',
-				'c' => '<p>主题会自动建好 <code>/login/</code>、文章归档、关于、联系、友情链接、<a href="' . esc_url( pk_site_page_url( 'blocks' ) ) . '">区块展厅</a>、<a href="' . esc_url( pk_site_page_url( 'html-tag' ) ) . '">排版标签</a>与本页，按 slug 自动匹配模板，正文可在后台编辑。</p><p>唯一需要手动新建的是 <code>/user/</code> 用户中心：后台 → 页面 → 新建页面，slug 填 <code>user</code> 发布即可。</p>',
+				'c' => '<p>主题会自动建好 <code>/login/</code>、文章归档、关于、联系、友情链接、<a href="' . esc_url( bang_site_page_url( 'blocks' ) ) . '">区块展厅</a>、<a href="' . esc_url( bang_site_page_url( 'html-tag' ) ) . '">排版标签</a>与本页，按 slug 自动匹配模板，正文可在后台编辑。</p><p>唯一需要手动新建的是 <code>/user/</code> 用户中心：后台 → 页面 → 新建页面，slug 填 <code>user</code> 发布即可。</p>',
 			),
 			array(
 				't' => '导入演示数据',
@@ -73,14 +73,14 @@ $pk_groups = array(
 				'c' => '<p><code>[code lang="php"]echo "Bang";[/code]</code>。语言留空会按开头特征自动嗅探；右上角按钮走 Clipboard API，失败时退回选中复制。</p>',
 			),
 			array(
-				't' => '画廊与画展',
+				't' => '图片集与画展',
 				'd' => '连续图片并宫格，空行分开成单张',
 				'c' => '<p>图集区块选「主图 + 缩略条」或「拼贴宫格」；也可以写 <code>[wall]</code>，每行一个图片地址。正文里连续图片会自动并成宫格，中间空一行则是单张大图。</p>',
 			),
 			array(
 				't' => '金句 / 链接卡 / 元信息',
 				'd' => '三个现成区块',
-				'c' => '<p>金句卡是主题里唯一允许渐变的组件；链接卡的外链统一走站内中转确认页并在新标签打开；元信息条适合写时间、地点、天气、设备。</p><p>到 <a href="' . esc_url( pk_site_page_url( 'blocks' ) ) . '">区块展厅</a> 可以一次看全七组示例并直接复制写法。</p>',
+				'c' => '<p>金句卡是主题里唯一允许渐变的组件；链接卡的外链统一走站内中转确认页并在新标签打开；元信息条适合写时间、地点、天气、设备。</p><p>到 <a href="' . esc_url( bang_site_page_url( 'blocks' ) ) . '">区块展厅</a> 可以一次看全七组示例并直接复制写法。</p>',
 			),
 			array(
 				't' => '区块还是简码',
@@ -103,7 +103,7 @@ $pk_groups = array(
 			array(
 				't' => 'AI 语义搜索（可选）',
 				'd' => '浏览器内推理，默认关闭',
-				'c' => '<p>在命令面板里打开开关后，用量化小模型在本地把文章标题与摘要转成向量，按余弦相似度排序。向量缓存在浏览器 localStorage，模型权重优先读同源的 <code>uploads/pk-hf-cache/</code>，不占用服务器算力。</p>',
+				'c' => '<p>在命令面板里打开开关后，用量化小模型在本地把文章标题与摘要转成向量，按余弦相似度排序。向量缓存在浏览器 localStorage，模型权重优先读同源的 <code>uploads/bang-hf-cache/</code>，不占用服务器算力。</p>',
 			),
 			array(
 				't' => '无刷新换页',
@@ -238,84 +238,102 @@ $pk_groups = array(
 	),
 );
 
-pk_page_open( '帮助中心', '先自己动手，再开口问。这里收着 Bang 的安装、写作、阅读与排障。' );
+$bang_item_total    = 0;
+foreach ( $bang_groups as $bang_g ) {
+	$bang_item_total += count( $bang_g['items'] );
+}
+$bang_chapter_total = count( $bang_groups ) + 2; // 加上「开源致谢」「还没解决」两节
+
+bang_page_open( '帮助中心', '先自己动手，再开口问。这里收着 Bang 的安装、写作、阅读与排障。' );
 ?>
-<div class="pk-help" data-pk-help>
-	<aside class="pk-help-side" aria-label="帮助目录">
-		<p class="pk-help-side-label">目录</p>
-		<nav class="pk-help-toc" id="pk-help-toc">
-			<?php foreach ( $pk_groups as $pk_g ) : ?>
-			<a class="pk-help-toc-link" href="#h-<?php echo esc_attr( $pk_g['id'] ); ?>" data-pk-help-link="h-<?php echo esc_attr( $pk_g['id'] ); ?>"><span><?php echo esc_html( $pk_g['num'] ); ?></span><?php echo esc_html( $pk_g['title'] ); ?></a>
+<div class="bang-help" data-bang-help>
+	<aside class="bang-help-side" aria-label="帮助目录">
+		<p class="bang-help-side-label">目录</p>
+		<nav class="bang-help-toc" id="bang-help-toc">
+			<?php foreach ( $bang_groups as $bang_g ) : ?>
+			<a class="bang-help-toc-link" href="#h-<?php echo esc_attr( $bang_g['id'] ); ?>" data-bang-help-link="h-<?php echo esc_attr( $bang_g['id'] ); ?>"><span><?php echo esc_html( $bang_g['num'] ); ?></span><?php echo esc_html( $bang_g['title'] ); ?></a>
 			<?php endforeach; ?>
-			<a class="pk-help-toc-link" href="#h-credits" data-pk-help-link="h-credits"><span>07</span>开源致谢</a>
-			<a class="pk-help-toc-link" href="#h-contact" data-pk-help-link="h-contact"><span>08</span>还没解决</a>
+			<a class="bang-help-toc-link" href="#h-credits" data-bang-help-link="h-credits"><span>07</span>开源致谢</a>
+			<a class="bang-help-toc-link" href="#h-contact" data-bang-help-link="h-contact"><span>08</span>还没解决</a>
 		</nav>
 	</aside>
 
-	<div class="pk-help-main">
-		<div class="pk-help-tools">
-			<label class="pk-help-search">
-				<span class="pk-help-search-ico" aria-hidden="true"><?php echo pk_icon( 'search', 17 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>
-				<input type="search" id="pk-help-search" placeholder="搜索条目，比如「滑块」「灯箱」「固定链接」" autocomplete="off" aria-label="搜索帮助条目">
-			</label>
-			<button type="button" class="pk-help-toggle" id="pk-help-toggle" aria-pressed="false">展开全部</button>
+	<div class="bang-help-main">
+		<div class="bang-help-overview">
+			<div class="bang-help-overview-main">
+				<span class="bang-help-overview-k">HELP CENTER</span>
+				<p class="bang-help-overview-t">找到答案，继续写下去。</p>
+				<span class="bang-help-overview-d">从安装到排障，<?php echo (int) $bang_item_total; ?> 条解答按场景分好类，点开即看。</span>
+			</div>
+			<div class="bang-help-overview-stats">
+				<div><strong><?php echo (int) $bang_chapter_total; ?></strong><span>章节</span></div>
+				<div><strong><?php echo (int) $bang_item_total; ?></strong><span>解答</span></div>
+				<div><strong>⌘K</strong><span>全局搜索</span></div>
+			</div>
 		</div>
-		<p class="pk-help-hits" id="pk-help-hits" hidden></p>
+		<div class="bang-help-tools">
+			<label class="bang-help-search">
+				<span class="bang-help-search-ico" aria-hidden="true"><?php echo bang_icon( 'search', 17 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>
+				<input type="search" id="bang-help-search" placeholder="搜索条目，比如「滑块」「灯箱」「固定链接」" autocomplete="off" aria-label="搜索帮助条目">
+			</label>
+			<button type="button" class="bang-help-toggle" id="bang-help-toggle" aria-pressed="false">展开全部</button>
+		</div>
+		<p class="bang-help-hits" id="bang-help-hits" hidden></p>
 
-		<?php foreach ( $pk_groups as $pk_g ) : ?>
-		<section class="pk-help-sec" id="h-<?php echo esc_attr( $pk_g['id'] ); ?>" data-pk-help-sec>
-			<header class="pk-help-sec-head">
-				<span class="pk-help-num"><?php echo esc_html( $pk_g['num'] ); ?></span>
+		<?php foreach ( $bang_groups as $bang_g ) : ?>
+		<section class="bang-help-sec" id="h-<?php echo esc_attr( $bang_g['id'] ); ?>" data-bang-help-sec>
+			<header class="bang-help-sec-head">
+				<span class="bang-help-num"><?php echo esc_html( $bang_g['num'] ); ?></span>
 				<div>
-					<h2><?php echo esc_html( $pk_g['title'] ); ?></h2>
-					<p><?php echo esc_html( $pk_g['desc'] ); ?></p>
+					<h2><?php echo esc_html( $bang_g['title'] ); ?></h2>
+					<p><?php echo esc_html( $bang_g['desc'] ); ?></p>
 				</div>
-				<span class="pk-help-sec-count"><?php echo count( $pk_g['items'] ); ?> 条</span>
+				<span class="bang-help-sec-count"><?php echo count( $bang_g['items'] ); ?> 条</span>
 			</header>
-			<div class="pk-help-items">
-				<?php foreach ( $pk_g['items'] as $pk_item ) : ?>
-				<details class="pk-help-item" data-pk-help-item>
+			<div class="bang-help-items">
+				<?php foreach ( $bang_g['items'] as $bang_item ) : ?>
+				<details class="bang-help-item" data-bang-help-item>
 					<summary>
-						<span class="pk-help-item-t"><?php echo esc_html( $pk_item['t'] ); ?></span>
-						<span class="pk-help-item-d"><?php echo esc_html( $pk_item['d'] ); ?></span>
-						<span class="pk-help-caret" aria-hidden="true"><?php echo pk_icon( 'chevron-down', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>
+						<span class="bang-help-item-t"><?php echo esc_html( $bang_item['t'] ); ?></span>
+						<span class="bang-help-item-d"><?php echo esc_html( $bang_item['d'] ); ?></span>
+						<span class="bang-help-caret" aria-hidden="true"><?php echo bang_icon( 'chevron-down', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>
 					</summary>
-					<div class="pk-help-answer"><?php echo wp_kses_post( $pk_item['c'] ); ?></div>
+					<div class="bang-help-answer"><?php echo wp_kses_post( $bang_item['c'] ); ?></div>
 				</details>
 				<?php endforeach; ?>
 			</div>
 		</section>
 		<?php endforeach; ?>
 
-		<section class="pk-help-sec" id="h-credits" data-pk-help-sec>
-			<header class="pk-help-sec-head">
-				<span class="pk-help-num">07</span>
+		<section class="bang-help-sec" id="h-credits" data-bang-help-sec>
+			<header class="bang-help-sec-head">
+				<span class="bang-help-num">07</span>
 				<div><h2>开源致谢</h2><p>站在这些项目上面，才有了现在这副样子。</p></div>
 			</header>
-			<div class="pk-help-credits">
-				<div class="pk-help-credit"><span class="pk-help-credit-n">PhotoSwipe 5.4.4</span><span class="pk-help-credit-l">MIT</span><span class="pk-help-credit-d">灯箱。随主题本地存放，不使用 CDN。</span></div>
-				<div class="pk-help-credit"><span class="pk-help-credit-n">Swup</span><span class="pk-help-credit-l">MIT</span><span class="pk-help-credit-d">全站无刷新换页。随主题本地存放。</span></div>
-				<div class="pk-help-credit"><span class="pk-help-credit-n">WordPress</span><span class="pk-help-credit-l">GPL</span><span class="pk-help-credit-d">内容、用户、评论与 REST。</span></div>
-				<div class="pk-help-credit"><span class="pk-help-credit-n">transformers.js</span><span class="pk-help-credit-l">Apache-2.0</span><span class="pk-help-credit-d">可选的浏览器内语义搜索，默认关闭、按需加载。</span></div>
+			<div class="bang-help-credits">
+				<div class="bang-help-credit"><span class="bang-help-credit-n">PhotoSwipe 5.4.4</span><span class="bang-help-credit-l">MIT</span><span class="bang-help-credit-d">灯箱。随主题本地存放，不使用 CDN。</span></div>
+				<div class="bang-help-credit"><span class="bang-help-credit-n">Swup</span><span class="bang-help-credit-l">MIT</span><span class="bang-help-credit-d">全站无刷新换页。随主题本地存放。</span></div>
+				<div class="bang-help-credit"><span class="bang-help-credit-n">WordPress</span><span class="bang-help-credit-l">GPL</span><span class="bang-help-credit-d">内容、用户、评论与 REST。</span></div>
+				<div class="bang-help-credit"><span class="bang-help-credit-n">transformers.js</span><span class="bang-help-credit-l">Apache-2.0</span><span class="bang-help-credit-d">可选的浏览器内语义搜索，默认关闭、按需加载。</span></div>
 			</div>
 		</section>
 
-		<section class="pk-help-sec" id="h-contact" data-pk-help-sec>
-			<header class="pk-help-sec-head">
-				<span class="pk-help-num">08</span>
+		<section class="bang-help-sec" id="h-contact" data-bang-help-sec>
+			<header class="bang-help-sec-head">
+				<span class="bang-help-num">08</span>
 				<div><h2>还没解决</h2><p>先把现象、浏览器和出现路径记下来，再联系。</p></div>
 			</header>
-			<div class="pk-help-contact">
-				<a href="<?php echo esc_url( pk_site_page_url( 'about' ) ); ?>"><span>关于本站</span><?php echo pk_icon( 'next', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>
-				<a href="<?php echo esc_url( pk_site_page_url( 'contact' ) ); ?>"><span>联系</span><?php echo pk_icon( 'next', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>
-				<a href="mailto:<?php echo esc_attr( pk_contact_email() ); ?>"><span><?php echo esc_html( pk_contact_email() ); ?></span><?php echo pk_icon( 'next', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>
-				<a href="<?php echo esc_url( home_url( '/' ) ); ?>"><span>回到首页</span><?php echo pk_icon( 'next', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>
+			<div class="bang-help-contact">
+				<a href="<?php echo esc_url( bang_site_page_url( 'about' ) ); ?>"><span>关于本站</span><?php echo bang_icon( 'next', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>
+				<a href="<?php echo esc_url( bang_site_page_url( 'contact' ) ); ?>"><span>联系</span><?php echo bang_icon( 'next', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>
+				<a href="mailto:<?php echo esc_attr( bang_contact_email() ); ?>"><span><?php echo esc_html( bang_contact_email() ); ?></span><?php echo bang_icon( 'next', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>
+				<a href="<?php echo esc_url( home_url( '/' ) ); ?>"><span>回到首页</span><?php echo bang_icon( 'next', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>
 			</div>
 		</section>
 
-		<p class="pk-help-empty" id="pk-help-empty" hidden>没有匹配的条目，换个关键词试试。</p>
+		<p class="bang-help-empty" id="bang-help-empty" hidden>没有匹配的条目，换个关键词试试。</p>
 	</div>
 </div>
 <?php
-pk_page_close();
+bang_page_close();
 get_footer();

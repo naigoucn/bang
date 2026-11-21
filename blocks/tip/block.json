@@ -1,14 +1,14 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "pianke/tip",
+  "name": "bang/tip",
   "version": "0.13.0",
   "title": "提示框",
-  "category": "pianke-blocks",
+  "category": "bang-blocks",
   "icon": "info",
   "description": "四种状态的提示卡：提示 / 注意 / 搞定 / 警告，黑白图标区分。",
   "keywords": ["提示", "警告", "notice", "tip"],
-  "textdomain": "pianke",
+  "textdomain": "bang",
   "supports": {
     "align": false,
     "anchor": true,

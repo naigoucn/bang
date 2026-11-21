@@ -29,7 +29,7 @@ const crypto = require('crypto');
 const axios = require('axios');
 
 const PLUGIN_ID = 'bang-unlock';
-const DEFAULT_REST_BASE = '/wp-json/pianke/v1/unlock';
+const DEFAULT_REST_BASE = '/wp-json/bang/v1/unlock';
 const DEFAULT_LEAVE_EVENTS = [
 	'group_member_leave', 'member_leave', 'group_leave',
 	'group_member_removed', 'quit_group', 'leave_group',
@@ -113,13 +113,13 @@ function restUrl(cfg, action) {
 	const base = String(cfg.wp_base || '').replace(/\/+$/, '');
 	let prefix = String(cfg.wp_rest_base || DEFAULT_REST_BASE).trim();
 	if (prefix.charAt(0) !== '/') { prefix = '/' + prefix; }
-	/* 未开启固定链接的站点：/?rest_route=/pianke/v1/unlock/bind */
+	/* 未开启固定链接的站点：/?rest_route=/bang/v1/unlock/bind */
 	if (prefix.indexOf('?') !== -1) { return base + prefix + '/' + action; }
 	return base + prefix.replace(/\/+$/, '') + '/' + action;
 }
 
 function makeSign(cfg, action, code, botUid, groupId, ts, nickname, joinedAt) {
-	/* 0.13.24：带群资料时末尾追加 nickname|joined_at，与主题 pk_unlock_sign() 完全一致；
+	/* 0.13.24：带群资料时末尾追加 nickname|joined_at，与主题 bang_unlock_sign() 完全一致；
 	   不带资料时保持 0.13.20 的五段格式，旧站点 / 旧插件互不干扰。 */
 	const parts = [action, code || '', botUid || '', groupId || '', ts];
 	if (nickname || joinedAt) { parts.push(nickname || '', joinedAt || 0); }
@@ -327,7 +327,7 @@ function extractLeaveIds(data) {
 /* ---------------------------------------------------------------- 退群统一上报 */
 /**
  * /unlock/leave 是幂等的：重复上报不会出错，所以事件与轮询可以并存。
- * 站内把 pk_unlock_state 置 left，前台 8 秒内轮询到就会换「请重新进群」文案并刷新。
+ * 站内把 bang_unlock_state 置 left，前台 8 秒内轮询到就会换「请重新进群」文案并刷新。
  */
 async function reportLeave(cfg, uid, gid, ctx, via) {
 	if (!uid) { return false; }
@@ -503,7 +503,7 @@ const meta = {
 	settingsSchema: [
 		{ key: 'wp_base', label: 'WordPress 站点地址', type: 'text', placeholder: 'https://bang.ink', help: '必须是机器人服务器能访问到的公网地址，结尾不要带斜杠。' },
 		{ key: 'wp_secret', label: '回调密钥', type: 'password', help: '与 Bang 设置 → 阅读解锁 → 机器人回调密钥 完全一致。' },
-		{ key: 'wp_rest_base', label: 'REST 前缀', type: 'text', placeholder: DEFAULT_REST_BASE, help: '站点开启了固定链接就用默认值；没开固定链接填 /?rest_route=/pianke/v1/unlock 。' },
+		{ key: 'wp_rest_base', label: 'REST 前缀', type: 'text', placeholder: DEFAULT_REST_BASE, help: '站点开启了固定链接就用默认值；没开固定链接填 /?rest_route=/bang/v1/unlock 。' },
 		{ key: 'group_id', label: '目标群 ID', type: 'text', help: '只对该群生效。留空表示接受任意群的消息，多群站点建议填。' },
 		{
 			key: 'heartbeat', label: '群内心跳', type: 'select',

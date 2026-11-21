@@ -1,14 +1,14 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "pianke/quote",
+  "name": "bang/quote",
   "version": "0.10.1",
   "title": "金句卡",
-  "category": "pianke-blocks",
+  "category": "bang-blocks",
   "icon": "format-quote",
   "description": "一段引文，可附上出处。",
   "keywords": ["引用", "金句", "quote"],
-  "textdomain": "pianke",
+  "textdomain": "bang",
   "supports": {
     "align": false,
     "anchor": true,

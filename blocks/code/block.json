@@ -1,14 +1,14 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "pianke/code",
+  "name": "bang/code",
   "version": "0.13.0",
   "title": "代码块",
-  "category": "pianke-blocks",
+  "category": "bang-blocks",
   "icon": "editor-code",
   "description": "带语言标签与一键复制的代码块，语言留空时自动识别。",
   "keywords": ["代码", "code", "复制", "高亮"],
-  "textdomain": "pianke",
+  "textdomain": "bang",
   "supports": {
     "align": false,
     "anchor": true,

@@ -15,16 +15,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 remove_action( 'wp_head', 'rel_canonical' );
 
-function pk_seo_is_home() {
+function bang_seo_is_home() {
 	return is_front_page() || is_home();
 }
 
 /**
  * 当前页面的 SEO 标题（用于 OG / Twitter，title 标签仍交给 WP 的 title-tag）。
  */
-function pk_seo_title() {
-	if ( pk_seo_is_home() ) {
-		$custom = trim( (string) pk_opt( 'seo_home_title' ) );
+function bang_seo_title() {
+	if ( bang_seo_is_home() ) {
+		$custom = trim( (string) bang_opt( 'seo_home_title' ) );
 		return $custom ? $custom : get_bloginfo( 'name' );
 	}
 	if ( is_singular() ) {
@@ -45,18 +45,18 @@ function pk_seo_title() {
 /**
  * 当前页面的描述。文章取纯文本摘要，分类取分类描述。
  */
-function pk_seo_description() {
-	if ( pk_seo_is_home() ) {
-		return trim( (string) pk_opt( 'seo_home_desc' ) );
+function bang_seo_description() {
+	if ( bang_seo_is_home() ) {
+		return trim( (string) bang_opt( 'seo_home_desc' ) );
 	}
 	if ( is_singular() ) {
 		/* 0.13.20：全站锁定时 description 不能取正文，否则 meta / og / Twitter /
 		   JSON-LD 会把正文开头一段原样带出去，等于从 <head> 泄露内容。 */
-		if ( function_exists( 'pk_unlock_post_locked' ) && pk_unlock_post_locked( get_queried_object_id() ) ) {
-			$group = pk_opt( 'unlock_group_name' ) ? pk_opt( 'unlock_group_name' ) : '交流群';
+		if ( function_exists( 'bang_unlock_post_locked' ) && bang_unlock_post_locked( get_queried_object_id() ) ) {
+			$group = bang_opt( 'unlock_group_name' ) ? bang_opt( 'unlock_group_name' ) : '交流群';
 			return '本文需加入' . $group . '并完成机器人绑定后阅读。';
 		}
-		$excerpt = pk_plain_excerpt( get_queried_object_id() );
+		$excerpt = function_exists( 'bang_ai_excerpt' ) ? bang_ai_excerpt( get_queried_object_id() ) : bang_plain_excerpt( get_queried_object_id() );
 		return $excerpt ? wp_trim_words( $excerpt, 40, '' ) : '';
 	}
 	if ( is_category() || is_tag() || is_tax() ) {
@@ -70,7 +70,7 @@ function pk_seo_description() {
 	return '';
 }
 
-function pk_seo_canonical_url() {
+function bang_seo_canonical_url() {
 	if ( is_singular() ) {
 		return get_permalink( get_queried_object_id() );
 	}
@@ -78,54 +78,54 @@ function pk_seo_canonical_url() {
 		$link = get_term_link( get_queried_object() );
 		return is_wp_error( $link ) ? '' : $link;
 	}
-	if ( pk_seo_is_home() ) {
+	if ( bang_seo_is_home() ) {
 		return home_url( '/' );
 	}
 	return '';
 }
 
-function pk_seo_robots() {
-	$noindex = ( is_search() && pk_opt( 'noindex_search' ) )
-		|| ( is_404() && pk_opt( 'noindex_404' ) )
-		|| ( is_archive() && ! is_category() && pk_opt( 'noindex_archive' ) );
+function bang_seo_robots() {
+	$noindex = ( is_search() && bang_opt( 'noindex_search' ) )
+		|| ( is_404() && bang_opt( 'noindex_404' ) )
+		|| ( is_archive() && ! is_category() && bang_opt( 'noindex_archive' ) );
 	return $noindex ? 'noindex, follow' : 'index, follow';
 }
 
-function pk_seo_image() {
+function bang_seo_image() {
 	if ( is_singular() && has_post_thumbnail( get_queried_object_id() ) ) {
 		$image = get_the_post_thumbnail_url( get_queried_object_id(), 'large' );
 		if ( $image ) {
 			return $image;
 		}
 	}
-	return esc_url_raw( (string) pk_opt( 'og_default_image' ) );
+	return esc_url_raw( (string) bang_opt( 'og_default_image' ) );
 }
 
 /**
  * 首页自定义标题 + 彻底移除副标题（与 functions.php 的兜底 filter 并存）。
  */
-function pk_seo_title_parts( $parts ) {
+function bang_seo_title_parts( $parts ) {
 	unset( $parts['tagline'] );
-	if ( pk_seo_is_home() ) {
-		$custom = trim( (string) pk_opt( 'seo_home_title' ) );
+	if ( bang_seo_is_home() ) {
+		$custom = trim( (string) bang_opt( 'seo_home_title' ) );
 		if ( $custom ) {
 			$parts['title'] = $custom;
 		}
 	}
 	return $parts;
 }
-add_filter( 'document_title_parts', 'pk_seo_title_parts', 12 );
+add_filter( 'document_title_parts', 'bang_seo_title_parts', 12 );
 
-function pk_seo_title_separator( $separator ) {
-	$custom = trim( (string) pk_opt( 'title_sep' ) );
+function bang_seo_title_separator( $separator ) {
+	$custom = trim( (string) bang_opt( 'title_sep' ) );
 	return '' !== $custom ? $custom : $separator;
 }
-add_filter( 'document_title_separator', 'pk_seo_title_separator' );
+add_filter( 'document_title_separator', 'bang_seo_title_separator' );
 
 /**
  * JSON-LD：WebSite +（文章时）BlogPosting 与 BreadcrumbList。
  */
-function pk_seo_jsonld( $image, $description ) {
+function bang_seo_jsonld( $image, $description ) {
 	$lang  = get_bloginfo( 'language' );
 	$name  = get_bloginfo( 'name' );
 	$graph = array(
@@ -164,7 +164,7 @@ function pk_seo_jsonld( $image, $description ) {
 		if ( $image ) {
 			$post['image'] = $image;
 		}
-		$section = pk_topic( $id );
+		$section = bang_topic( $id );
 		if ( $section ) {
 			$post['articleSection'] = $section;
 		}
@@ -199,18 +199,18 @@ function pk_seo_jsonld( $image, $description ) {
 /**
  * 主输出：挂在 wp_head 早期（title 之后、其它脚本之前）。
  */
-function pk_seo_head() {
-	$options     = pk_options();
-	$title       = pk_seo_title();
-	$description = pk_seo_description();
-	$image       = pk_seo_image();
-	$canonical   = pk_opt( 'seo_canonical' ) ? pk_seo_canonical_url() : '';
+function bang_seo_head() {
+	$options     = bang_options();
+	$title       = bang_seo_title();
+	$description = bang_seo_description();
+	$image       = bang_seo_image();
+	$canonical   = bang_opt( 'seo_canonical' ) ? bang_seo_canonical_url() : '';
 	$page_url    = $canonical ? $canonical : home_url( '/' );
 
 	echo "\n<!-- Bang SEO -->\n";
 	/* /login/ 的 robots 交给 wp_robots 输出（noindex, nofollow），这里不再重复一条 */
 	if ( ! is_page( 'login' ) ) {
-		echo '<meta name="robots" content="' . esc_attr( pk_seo_robots() ) . "\">\n";
+		echo '<meta name="robots" content="' . esc_attr( bang_seo_robots() ) . "\">\n";
 	}
 	if ( $description ) {
 		echo '<meta name="description" content="' . esc_attr( $description ) . "\">\n";
@@ -256,7 +256,7 @@ function pk_seo_head() {
 			$id = get_queried_object_id();
 			echo '<meta property="article:published_time" content="' . esc_attr( get_the_date( 'c', $id ) ) . "\">\n";
 			echo '<meta property="article:modified_time" content="' . esc_attr( get_the_modified_date( 'c', $id ) ) . "\">\n";
-			$section = pk_topic( $id );
+			$section = bang_topic( $id );
 			if ( $section ) {
 				echo '<meta property="article:section" content="' . esc_attr( $section ) . "\">\n";
 			}
@@ -284,27 +284,27 @@ function pk_seo_head() {
 	}
 
 	if ( $options['seo_jsonld'] ) {
-		pk_seo_jsonld( $image, $description );
+		bang_seo_jsonld( $image, $description );
 	}
 	echo "<!-- /Bang SEO -->\n";
 }
-add_action( 'wp_head', 'pk_seo_head', 2 );
+add_action( 'wp_head', 'bang_seo_head', 2 );
 
 /**
  * 自定义代码：仅管理员可保存原文，前台原样输出。
  */
-function pk_seo_head_code() {
-	$code = trim( (string) pk_opt( 'head_code' ) );
+function bang_seo_head_code() {
+	$code = trim( (string) bang_opt( 'head_code' ) );
 	if ( $code ) {
 		echo "\n" . $code . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput
 	}
 }
-add_action( 'wp_head', 'pk_seo_head_code', 999 );
+add_action( 'wp_head', 'bang_seo_head_code', 999 );
 
-function pk_seo_footer_code() {
-	$code = trim( (string) pk_opt( 'footer_code' ) );
+function bang_seo_footer_code() {
+	$code = trim( (string) bang_opt( 'footer_code' ) );
 	if ( $code ) {
 		echo "\n" . $code . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput
 	}
 }
-add_action( 'wp_footer', 'pk_seo_footer_code', 999 );
+add_action( 'wp_footer', 'bang_seo_footer_code', 999 );

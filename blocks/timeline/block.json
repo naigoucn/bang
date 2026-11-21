@@ -1,0 +1,28 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "bang/timeline",
+  "version": "0.13.0",
+  "title": "时间轴",
+  "category": "bang-blocks",
+  "icon": "calendar",
+  "description": "竖线 + 圆点的极简时间线：日期 / 标题 / 说明，适合版本记录与大事记。",
+  "keywords": ["时间轴", "大事记", "版本", "timeline"],
+  "textdomain": "bang",
+  "supports": {
+    "align": ["wide", "full"],
+    "anchor": true,
+    "className": true
+  },
+  "attributes": {
+    "text": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "example": {
+    "attributes": {
+      "text": "2024-03|上线|第一版发布\n2024-06|改版|换成极简风\n2025-01|开源|代码全部公开"
+    }
+  }
+}

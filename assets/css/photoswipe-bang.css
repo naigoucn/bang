@@ -109,7 +109,7 @@
 .pswp__button--arrow--next .pswp__icn { left: auto; right: 10px; }
 
 /* 图注：底部居中的黑底胶囊，跟随换页淡入淡出（pswp__hide-on-close 负责） */
-.pk-pswp-caption {
+.bang-pswp-caption {
   position: absolute;
   left: 50%;
   bottom: max(20px, env(safe-area-inset-bottom));
@@ -126,7 +126,7 @@
   text-align: center;
   pointer-events: none;
 }
-.pk-pswp-caption[hidden] { display: none; }
+.bang-pswp-caption[hidden] { display: none; }
 
 .pswp__error-msg { color: var(--ink); }
 
@@ -137,7 +137,7 @@
   .pswp__button--zoom { width: 38px; height: 38px; }
   .pswp__button--close .pswp__icn,
   .pswp__button--zoom .pswp__icn { top: 7px; left: 7px; }
-  .pk-pswp-caption { bottom: max(14px, env(safe-area-inset-bottom)); font-size: 11px; }
+  .bang-pswp-caption { bottom: max(14px, env(safe-area-inset-bottom)); font-size: 11px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

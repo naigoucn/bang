@@ -1,14 +1,14 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "pianke/meta",
+  "name": "bang/meta",
   "version": "0.10.1",
   "title": "元信息条",
-  "category": "pianke-blocks",
+  "category": "bang-blocks",
   "icon": "list-view",
   "description": "时间 / 地点 / 天气 / 设备等一行小字。",
   "keywords": ["元信息", "时间", "地点", "meta"],
-  "textdomain": "pianke",
+  "textdomain": "bang",
   "supports": {
     "align": false,
     "anchor": true,

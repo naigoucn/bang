@@ -1,14 +1,14 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "pianke/gallery",
+  "name": "bang/gallery",
   "version": "0.10.1",
   "title": "图集",
-  "category": "pianke-blocks",
+  "category": "bang-blocks",
   "icon": "images-alt",
   "description": "一组图片，主图加缩略条或拼贴宫格，点击可放大查看。",
   "keywords": ["图集", "多图", "gallery"],
-  "textdomain": "pianke",
+  "textdomain": "bang",
   "supports": {
     "align": ["wide", "full"],
     "anchor": true,

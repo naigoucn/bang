@@ -9,16 +9,16 @@
  *
  * 只收写作场景用得到的标签，不堆表单控件；文案、示例与分组都是本主题
  * 自己写的，版式沿用 1180 宽容器 + 细线圆角卡片 + 黑白两色。
- * 本页由 pk_ensure_site_pages() 自动创建（slug: html-tag）。
+ * 本页由 bang_ensure_site_pages() 自动创建（slug: html-tag）。
  *
  * @package Bang
  */
 
 get_header();
 
-$pk_blocks_url = pk_site_page_url( 'blocks' );
+$bang_blocks_url = bang_site_page_url( 'blocks' );
 
-$pk_groups = array(
+$bang_groups = array(
 	array(
 		'id'    => 'type',
 		'no'    => '01',
@@ -49,7 +49,7 @@ $pk_groups = array(
 				'src'  => array(
 					'<a href="/blocks/">去看区块展厅</a>',
 				),
-				'demo' => '<p>想要更完整的写法，可以<a href="' . esc_url( $pk_blocks_url ) . '">去看区块展厅</a>。</p>',
+				'demo' => '<p>想要更完整的写法，可以<a href="' . esc_url( $bang_blocks_url ) . '">去看区块展厅</a>。</p>',
 			),
 			array(
 				'tag'  => '<mark>',
@@ -154,7 +154,7 @@ $pk_groups = array(
 					'  <figcaption>图注</figcaption>',
 					'</figure>',
 				),
-				'demo' => '<figure><div class="pk-tag-ph">图片占位 · 12px 圆角</div><figcaption>换成 &lt;img&gt; 就是文章里的样子</figcaption></figure>',
+				'demo' => '<figure><div class="bang-tag-ph">图片占位 · 12px 圆角</div><figcaption>换成 &lt;img&gt; 就是文章里的样子</figcaption></figure>',
 			),
 			array(
 				'tag'  => '<details> <summary>',
@@ -190,7 +190,7 @@ $pk_groups = array(
 					'<pre><code>const bang = \'ink\';',
 					'console.log(bang);</code></pre>',
 				),
-				'demo' => pk_kit_code_html( 'js', "const bang = { ink: '#000', paper: '#fff' };\nconsole.log(bang.ink);", 'app.js' ),
+				'demo' => bang_kit_code_html( 'js', "const bang = { ink: '#000', paper: '#fff' };\nconsole.log(bang.ink);", 'app.js' ),
 			),
 			array(
 				'tag'  => '[tip] [fold] [code]',
@@ -199,51 +199,51 @@ $pk_groups = array(
 					'[tip type="info"]补充说明[/tip]',
 					'[fold title="展开看看"]内容[/fold]',
 				),
-				'demo' => '<p>这几条不是 HTML 标签，是主题的简码写法。它们生成的提示框、折叠与代码块，在<a href="' . esc_url( $pk_blocks_url ) . '">区块展厅</a>里能逐条看效果。</p>',
+				'demo' => '<p>这几条不是 HTML 标签，是主题的简码写法。它们生成的提示框、折叠与代码块，在<a href="' . esc_url( $bang_blocks_url ) . '">区块展厅</a>里能逐条看效果。</p>',
 			),
 		),
 	),
 );
 
-pk_page_open( '排版标签', '写字时用得到的 HTML 标签，在这套黑白版式里长什么样。' );
+bang_page_open( '排版标签', '写字时用得到的 HTML 标签，在这套黑白版式里长什么样。' );
 ?>
-<div class="pk-tag">
-	<p class="pk-tag-intro">Bang 的正文只做一件事：让文字安静地待在该在的位置。下面这些标签可以直接写进文章，主题会自动给它们统一的间距、描边与圆角——不用额外加类名，也不用自己写样式。左边是写法，右边是它在正文里真实的样子。</p>
+<div class="bang-tag">
+	<p class="bang-tag-intro">Bang 的正文只做一件事：让文字安静地待在该在的位置。下面这些标签可以直接写进文章，主题会自动给它们统一的间距、描边与圆角——不用额外加类名，也不用自己写样式。左边是写法，右边是它在正文里真实的样子。</p>
 
-	<nav class="pk-tag-index" aria-label="标签分组">
-		<?php foreach ( $pk_groups as $pk_group ) : ?>
-			<a class="pk-tag-index-link" href="#<?php echo esc_attr( $pk_group['id'] ); ?>" data-no-swup><?php echo esc_html( $pk_group['no'] . ' ' . $pk_group['name'] ); ?></a>
+	<nav class="bang-tag-index" aria-label="标签分组">
+		<?php foreach ( $bang_groups as $bang_group ) : ?>
+			<a class="bang-tag-index-link" href="#<?php echo esc_attr( $bang_group['id'] ); ?>" data-no-swup><?php echo esc_html( $bang_group['no'] . ' ' . $bang_group['name'] ); ?></a>
 		<?php endforeach; ?>
-		<a class="pk-tag-index-link" href="<?php echo esc_url( $pk_blocks_url ); ?>">区块展厅 →</a>
+		<a class="bang-tag-index-link" href="<?php echo esc_url( $bang_blocks_url ); ?>">区块展厅 →</a>
 	</nav>
 
-	<?php foreach ( $pk_groups as $pk_group ) : ?>
-	<section class="pk-tag-group" id="<?php echo esc_attr( $pk_group['id'] ); ?>">
-		<header class="pk-tag-group-head">
-			<h2><?php echo esc_html( $pk_group['name'] ); ?></h2>
-			<span><?php echo esc_html( $pk_group['no'] . ' / 共 ' . count( $pk_group['items'] ) . ' 条' ); ?></span>
+	<?php foreach ( $bang_groups as $bang_group ) : ?>
+	<section class="bang-tag-group" id="<?php echo esc_attr( $bang_group['id'] ); ?>">
+		<header class="bang-tag-group-head">
+			<h2><?php echo esc_html( $bang_group['name'] ); ?></h2>
+			<span><?php echo esc_html( $bang_group['no'] . ' / 共 ' . count( $bang_group['items'] ) . ' 条' ); ?></span>
 		</header>
-		<p class="pk-tag-group-desc"><?php echo esc_html( $pk_group['desc'] ); ?></p>
-		<div class="pk-tag-grid">
-			<?php foreach ( $pk_group['items'] as $pk_item ) : ?>
-			<article class="pk-tag-row">
-				<div class="pk-tag-meta">
-					<code class="pk-tag-name"><?php echo esc_html( $pk_item['tag'] ); ?></code>
-					<p class="pk-tag-desc"><?php echo esc_html( $pk_item['desc'] ); ?></p>
-					<pre class="pk-tag-src"><code><?php echo esc_html( implode( "\n", $pk_item['src'] ) ); ?></code></pre>
+		<p class="bang-tag-group-desc"><?php echo esc_html( $bang_group['desc'] ); ?></p>
+		<div class="bang-tag-grid">
+			<?php foreach ( $bang_group['items'] as $bang_item ) : ?>
+			<article class="bang-tag-row">
+				<div class="bang-tag-meta">
+					<code class="bang-tag-name"><?php echo esc_html( $bang_item['tag'] ); ?></code>
+					<p class="bang-tag-desc"><?php echo esc_html( $bang_item['desc'] ); ?></p>
+					<pre class="bang-tag-src"><code><?php echo esc_html( implode( "\n", $bang_item['src'] ) ); ?></code></pre>
 				</div>
-				<div class="pk-tag-demo prose"><?php echo $pk_item['demo']; // phpcs:ignore WordPress.Security.EscapeOutput -- 静态示例 HTML，渲染函数内部已转义 ?></div>
+				<div class="bang-tag-demo prose"><?php echo $bang_item['demo']; // phpcs:ignore WordPress.Security.EscapeOutput -- 静态示例 HTML，渲染函数内部已转义 ?></div>
 			</article>
 			<?php endforeach; ?>
 		</div>
 	</section>
 	<?php endforeach; ?>
 
-	<div class="pk-tag-more">
+	<div class="bang-tag-more">
 		<span>上面是正文标签。提示框、折叠、代码块、画廊这些正文区块，是另一套东西。</span>
-		<a class="pk-tag-more-link" href="<?php echo esc_url( $pk_blocks_url ); ?>">去区块展厅 <?php echo pk_kit_icon( 'arrow', 14 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>
+		<a class="bang-tag-more-link" href="<?php echo esc_url( $bang_blocks_url ); ?>">去区块展厅 <?php echo bang_kit_icon( 'arrow', 14 ); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>
 	</div>
 </div>
 <?php
-pk_page_close();
+bang_page_close();
 get_footer();
